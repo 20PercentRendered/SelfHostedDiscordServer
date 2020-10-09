@@ -2,7 +2,7 @@
 A self hostable Discord server. Currently very alpha.
 
 ## Features in gateway
- - [x] HELLO, HEARTBEAT_ACK and READY payloads
+ - [ ] HELLO, HEARTBEAT_ACK and READY payloads
 ## Features in voice gateway
  - [ ] Connecting
  - [ ] Speaking
