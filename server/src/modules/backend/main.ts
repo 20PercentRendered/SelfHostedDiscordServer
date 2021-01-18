@@ -1,13 +1,15 @@
-const express = require('express');
-const http = require('http');
-const https = require('https');
+import express from 'express';
+import http from 'http';
+import https from 'https';
 const logger = require('../../logger').create("REST");
-const vhost = require('@tryghost/vhost-middleware');
-const fs = require('fs')
-    , path = require( 'path' )
-    , glob = require('glob')
-    , os = require('os');
+import vhost from '@tryghost/vhost-middleware';
+import fs  from 'fs' 
+import path = require( 'path' )
+import glob = require('glob')
+import os = require('os');
 var app = express();
+//required for tsc
+import moduleConfig from './module.json'
 
 //required for post requests
 app.use(express.json());
@@ -26,14 +28,18 @@ function init(next) {
             }
             next();
         })
-        global.app = app;
+        global['storage'].getDB("test")
+        global['app'] = app;
                 
         //create thy servers
-        global.httpsServer = https.createServer(global.ssl, app);
-        global.httpServer = http.createServer(app);
+
+        global['httpsServer'] = https.createServer(global['ssl'], app);
+        //global['httpServer'] = http.createServer(app);
+
         //start thy servers
-        global.httpsServer.listen(443);
-        global.httpServer.listen(80);
+        
+        global['httpsServer'].listen(8888);
+        //global['httpServer'].listen(80);
         
         logger.info("Loading routes.")
         glob.sync(__dirname+'/site/*/index.js' ).forEach( function( file ) {
@@ -58,4 +64,4 @@ function init(next) {
 
         next();
 }
-module.exports.init = init;
+export {init};

@@ -1,16 +1,18 @@
-const pem = require('pem');
+import pem from 'pem';
 const logger = require('../../logger').create("SSL");
-const util = require('util');
+import util from 'util';
+//required for tsc
+import moduleConfig from './module.json'
 
 function init(next) {
-    if (global.ssl) {
+    if (global['ssl']) {
         logger.info("Loading cached SSL")
-        return global.ssl;
+        return global['ssl'];
     }
     try {
         const privateKey  = fs.readFileSync('sslcert/server.key', 'utf8');
         const certificate = fs.readFileSync('sslcert/server.crt', 'utf8');
-        global.ssl = {key: privateKey, cert: certificate};
+        global['ssl'] = {key: privateKey, cert: certificate};
     } catch (e) {
         logger.info("Creating certs. ")
         logger.warn("Consider using your own certificates.")
@@ -24,11 +26,11 @@ function init(next) {
               console.log("Exiting as SSL is required and keys failed to generate.")
               process.exit(1);
             }
-            global.ssl = {key: keys.serviceKey, cert: keys.certificate};
+            global['ssl'] = {key: keys.serviceKey, cert: keys.certificate};
             logger.info("Certificates created successfully.")
             next();
         })
     }
 }
 
-module.exports.init = init;
+export {init};

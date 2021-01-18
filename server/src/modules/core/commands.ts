@@ -8,7 +8,7 @@ const fs = require('fs')
 var commands = [];
 var commandnames = [];
 myRL.init();
-glob.sync( './commands/*/command.json' ).forEach( function( file ) {
+glob.sync(process.cwd()+'/commands/*/command.json' ).forEach( function( file ) {
     var command = require(path.resolve( file ));
     commandnames.push(command.name);
     commands.push(require(`${file}/../${command.file}`));
@@ -37,3 +37,12 @@ myRL.on('SIGINT', function(rl) {
     logger.warn("Shutting down");
     process.exit(0);
 })
+function registerCommand(name, cb) {
+    commandnames.push(name);
+    commands.push({run: cb});
+    myRL.setCompletion(commandnames);
+}
+global['commands'] = {};
+global['commands'].registerCommand = registerCommand;
+
+export {};
