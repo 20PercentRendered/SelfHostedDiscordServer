@@ -1,4 +1,5 @@
-const logger = require('../../logger').create("Storage")
+import { Logger } from '@main/logger';
+const logger = new Logger("Storage")
 const Database = require('./database')
 var instances = [];
 //required for tsc

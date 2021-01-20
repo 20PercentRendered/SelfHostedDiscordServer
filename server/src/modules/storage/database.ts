@@ -2,8 +2,8 @@ import { Loki } from "@lokidb/loki";
 
 import lokidb from "@lokidb/loki";
 import { FSStorage } from "@lokidb/fs-storage";
-const logger = require(process.cwd()+"/logger")
 import fs from "fs";
+import { Logger } from "@main/logger";
 FSStorage.register();
 class Database {
     name: string;
@@ -16,7 +16,7 @@ class Database {
         this.database = new lokidb(this.databaseFile,{
             serializationMethod: "pretty"
         });
-        this.logger = logger.create(name+"DB");
+        this.logger = new Logger('name+"DB"')
         this.init();
     }
     async init() {

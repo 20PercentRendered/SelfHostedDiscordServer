@@ -1,5 +1,6 @@
+import { Logger } from '@main/logger';
 import pem from 'pem';
-const logger = require('../../logger').create("SSL");
+const logger = new Logger("SSL");
 import util from 'util';
 //required for tsc
 import moduleConfig from './module.json'

@@ -1,7 +1,9 @@
+import { Logger } from '@main/logger';
 import express from 'express';
 import http from 'http';
 import https from 'https';
-const logger = require('../../logger').create("REST");
+
+const logger = new Logger("REST")
 import vhost from '@tryghost/vhost-middleware';
 import fs  from 'fs' 
 import path = require( 'path' )

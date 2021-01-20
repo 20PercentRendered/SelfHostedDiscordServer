@@ -1,8 +1,9 @@
 import { BaseModule } from "./classes/modules/BaseModule";
+import { Logger } from "@main/logger";
 
 import path from 'path';
 import glob from 'glob';
-const logger = require('./logger').create("Loader")
+const logger = new Logger("Loader");
 import dgraph from 'dependency-graph';
 
 var graph = new dgraph.DepGraph();

@@ -1,8 +1,10 @@
+import { Logger } from "@main/logger";
+
 //eventually modularize
 const fs = require('fs')
     , path = require( 'path' )
     , glob = require('glob')
-    , logger = require('./logger').create("Commands")
+    , logger = new Logger("Commands")
     , myRL = require('serverline')
     , os = require('os');
 var commands = [];
