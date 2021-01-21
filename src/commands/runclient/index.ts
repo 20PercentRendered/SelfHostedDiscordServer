@@ -1,9 +1,12 @@
+import { Server } from "@main/main";
+
 const os = require('os')
     , path = require('path')
     , fs = require('fs')
+    , port = new Server().settings.port
     , child_process = require('child_process')
     , args = [
-        `--host-rules="MAP * 127.0.0.1"`,
+        `--host-rules="MAP * 127.0.0.1${port}"`,
         "--ignore-certificate-errors",
         "--allow-insecure-localhost",
         "--disable-http-cache"];

@@ -1,5 +1,6 @@
 import { Logger } from '@main/logger';
 import pem from 'pem';
+import fs from 'fs'
 const logger = new Logger("SSL");
 import util from 'util';
 //required for tsc
