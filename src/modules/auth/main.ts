@@ -1,16 +1,18 @@
 import { BaseModule } from '../../classes/modules/BaseModule';
 
-class AuthModule implements BaseModule {
+export default class AuthModule implements BaseModule {
+    author?: string;
     public readonly name: string = "Token Handler Module";
     public readonly intName: string = "auth";
     public readonly version: number = 1;
     readonly dependencies = new Array<string>(
-        "backend",
-        "storage"
+        
     );
     init(next: () => void) {
         next();
     }
+    stop(next: () => void) {
+        next();
+    }
     
 }
-export { AuthModule }

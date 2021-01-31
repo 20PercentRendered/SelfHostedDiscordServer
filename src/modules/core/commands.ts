@@ -1,6 +1,5 @@
 import { Logger } from "@main/logger";
 
-//eventually modularize
 const fs = require('fs')
     , path = require( 'path' )
     , glob = require('glob')
@@ -10,10 +9,15 @@ const fs = require('fs')
 var commands = [];
 var commandnames = [];
 myRL.init();
-glob.sync(process.cwd()+'/commands/*/command.json' ).forEach( function( file ) {
-    var command = require(path.resolve( file ));
-    commandnames.push(command.name);
-    commands.push(require(`${file}/../${command.file}`));
+glob.sync( process.cwd()+'/commands/*' ).sort().forEach( function( file ) {
+    try {
+        var command = new (require(path.resolve(process.cwd() + "/"+ file+"/main"))).default;
+        logger.info("Found "+ command.name)
+        commands.push(command);
+    } catch (e) {
+        logger.error("Failed to load:" + file)
+        logger.error(e);
+    }
 });
 myRL.setCompletion(commandnames);
 logger.info(`Loaded ${commands.length} commands.`);
@@ -44,7 +48,6 @@ function registerCommand(name, cb) {
     commands.push({run: cb});
     myRL.setCompletion(commandnames);
 }
-global['commands'] = {};
 global['commands'].registerCommand = registerCommand;
 
 export {};

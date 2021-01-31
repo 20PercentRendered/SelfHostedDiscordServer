@@ -10,13 +10,19 @@ import path = require( 'path' )
 import glob = require('glob')
 import os = require('os');
 var app = express();
-//required for tsc
-import moduleConfig from './module.json'
 
-//required for post requests
-app.use(express.json());
+import { BaseModule } from '../../classes/modules/BaseModule';
 
-function init(next) {
+export default class RestModule implements BaseModule {
+    public readonly name: string = "REST Api";
+    public readonly intName: string = "rest";
+    public readonly version: number = 1;
+    readonly dependencies = new Array<string>(
+        "ssl",
+        "storage"
+    );
+    init(next: () => void) {
+        app.use(express.json());
         if (process.env.DEBUG=="yes") {
             logger.warn("Console spam inbound, debug mode on")
         }
@@ -65,5 +71,8 @@ function init(next) {
         });
 
         next();
+    }
+    stop(next: () => void) {
+        next();
+    }
 }
-export {init};

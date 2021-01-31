@@ -1,5 +1,5 @@
 /**
- * The base module, you should implement this on every module that is a module.
+ * The base module, you should implement this on every module.
  */
 export abstract class BaseModule {
     /**
@@ -27,4 +27,9 @@ export abstract class BaseModule {
      * @param next Next should be called after all initialization is finished. Call next after all async functions have finished successfully.
      */
     abstract init(next: () => void);
+    /**
+     * The stop function. Optional but recommended to save data.
+     * @param next Next should be called similarly to init, but this time after saving data, or disconnecting users etc. 
+    */
+    abstract stop(next: () => void);
 }
