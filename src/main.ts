@@ -1,4 +1,8 @@
+import { Logger } from "./logger";
 import { ServerData } from "./serverdata";
 
 // Load everything
-new ServerData().init(); 
+ServerData.getInstance();
+var logger = new Logger("Init");
+logger.info("Begin startup sequence.");
+require("./loader").init();
