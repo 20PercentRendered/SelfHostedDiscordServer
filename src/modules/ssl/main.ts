@@ -58,7 +58,9 @@ export default class SSLModule implements BaseModule {
 				if (err) {
 					reject(err);
 				}
-				fs.mkdirSync("sslcert");
+				if (!fs.existsSync("sslcert")){
+					fs.mkdirSync("sslcert");
+				}				
 				fs.writeFileSync("sslcert/server.key", keys.serviceKey);
 				fs.writeFileSync("sslcert/server.crt", keys.certificate);
 				fs.writeFileSync("sslcert/selfsigned.marker", JSON.stringify(new SelfSignedMarker(Date.now(),this.days)));
