@@ -1,3 +1,6 @@
 export class Settings {
-    port: string
+	port: string;
+	constructor() {
+		this.port = "8877";
+	}
 }
