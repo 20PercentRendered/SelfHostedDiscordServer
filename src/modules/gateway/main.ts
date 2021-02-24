@@ -17,6 +17,7 @@ export default class GatewayModule implements BaseModule {
 			server: ServerData.getInstance().modules.getModule<RestModule>("rest")
 				.httpsServer,
 			perMessageDeflate: false, // disabling permessagedeflate as we handle compression ourselves
+			path: "/gateway"
 		});
 		this.wss.on("connection", (ws, request) => {
 			var conn = new Connection(ws, request);

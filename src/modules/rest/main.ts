@@ -23,11 +23,11 @@ export default class RestModule implements BaseModule {
 	async init(next: () => void) {
 		this.logger = new Logger("REST");
 		this.routerMiddleware = createProxyMiddleware(
-			{ target: 'https://162.159.135.232', changeOrigin: false,
+			{ target: 'https://162.159.135.232', changeOrigin: true,
 			headers: {
 			  'Host': 'discord.com' //cloudflare will let us go if we have a Host header
 			}, 
-			secure: true
+			secure: false
 		})
 		this.appModifier = new AppModifier();
 		await this.appModifier.init();
@@ -47,6 +47,7 @@ export default class RestModule implements BaseModule {
 		this.app.get("/login", (req,res,next)=>{
 			this.appModifier.requestHandler(req,res,next);
 		});
+
 		this.app.get("/", (req,res,next)=>{
 			res.redirect('/app');
 		})
