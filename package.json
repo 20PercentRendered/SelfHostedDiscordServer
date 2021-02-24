@@ -37,6 +37,7 @@
     "express-ws": "^4.0.0",
     "flake-idgen": "^1.4.0",
     "glob": "^7.1.6",
+    "http-error-pages": "^3.1.0",
     "http-proxy-middleware": "^1.0.5",
     "lz4": "^0.6.5",
     "memory-cache": "^0.2.0",

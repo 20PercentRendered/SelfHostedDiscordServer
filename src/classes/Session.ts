@@ -2,7 +2,6 @@ import { Connection } from "@main/modules/gateway/connection";
 
 export class Session {
 	public token: string;
-	public webSocketConnection: Connection;
 }
 export class SessionArray extends Array<Session> {
 	getSessionById(token: string) {

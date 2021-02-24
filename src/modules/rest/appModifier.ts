@@ -19,20 +19,19 @@ export class AppModifier {
         });
 
     }
-    generateModificationData(ip: string, port: string): Array<ModificationData> {
-        ip = ip.replace(ip.substring(ip.indexOf(":"), ip.length),"")
+    generateModificationData(ip: String): Array<ModificationData> {
         return new Array<ModificationData>(
-            new ModificationData("API_ENDPOINT",`//${ip}:${port}/api`),
-            new ModificationData("WEBAPP_ENDPOINT",`//${ip}:${port}`),
-            new ModificationData("CDN_HOST",`${ip}:${port}/cdn`),
-            new ModificationData("ASSET_ENDPOINT",`${ip}:${port}`),
-            new ModificationData("MEDIA_PROXY_ENDPOINT",`${ip}:${port}`),
-            new ModificationData("WIDGET_ENDPOINT",`//${ip}:${port}/widget`),
-            new ModificationData("MARKETING_ENDPOINT:",`${ip}:${port}`),
-            new ModificationData("NETWORKING_ENDPOINT",`//${ip}:${port}/`),
-            new ModificationData("RTC_LATENCY_ENDPOINT",`//${ip}:${port}/latency/rtc`),
-            new ModificationData("ACTIVITY_APPLICATION_HOST",`//${ip}:${port}/activities`),
-            new ModificationData("REMOTE_AUTH_ENDPOINT",`//${ip}:${port}/authgateway`),
+            new ModificationData("API_ENDPOINT",`//${ip}/api`),
+            new ModificationData("WEBAPP_ENDPOINT",`//${ip}`),
+            new ModificationData("CDN_HOST",`${ip}/cdn`),
+            new ModificationData("ASSET_ENDPOINT",`${ip}`),
+            new ModificationData("MEDIA_PROXY_ENDPOINT",`${ip}`),
+            new ModificationData("WIDGET_ENDPOINT",`//${ip}/widget`),
+            new ModificationData("MARKETING_ENDPOINT:",`${ip}`),
+            new ModificationData("NETWORKING_ENDPOINT",`//${ip}/`),
+            new ModificationData("RTC_LATENCY_ENDPOINT",`//${ip}/latency/rtc`),
+            new ModificationData("ACTIVITY_APPLICATION_HOST",`//${ip}/activities`),
+            new ModificationData("REMOTE_AUTH_ENDPOINT",`//${ip}/authgateway`),
             new ModificationData("SENTRY_TAGS",{
                 "buildId":"",
                 "buildType":"normal"
@@ -43,7 +42,7 @@ export class AppModifier {
         )
     }
     modifyApp(type: ModificationType, data: Array<ModificationData>) {
-        // Clone app to not make changes as we go, apply once done
+        // Clone app to not make changes
         var modifiedApp: string = this.app.substring(0, this.app.length);
         switch (type) {
             case ModificationType.GLOBAL_ENV: 
@@ -72,7 +71,7 @@ export class AppModifier {
                 // Now that we're done, let's turn it back into a string
                 GLOBAL_ENV = JSON.stringify(GLOBAL_ENV);
                 modifiedApp = modifiedApp.replace(ORIGINAL_GLOBAL_ENV,"GLOBAL_ENV = "+GLOBAL_ENV);
-                this.logger.info("Changed "+data.join(", "))
+                this.logger.debug("Changed "+data.join(", "))
             break;
         }
         return modifiedApp;
@@ -81,9 +80,7 @@ export class AppModifier {
         res.setHeader('content-type', 'text/html');
         res.send(Buffer.from(
             this.modifyApp(ModificationType.GLOBAL_ENV, 
-                this.generateModificationData(req.headers.host, 
-                    ServerData.getInstance().settings.port
-                )
+                this.generateModificationData(req.headers.host)
             )
         ));
     }

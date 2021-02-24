@@ -2,7 +2,7 @@ import { ServerData } from "@main/serverdata";
 import RestModule from "@main/modules/rest/main";
 import { BaseModule } from "@main/classes/modules/BaseModule";
 import ws from "ws";
-import { Connection } from "./connection";
+import { Connection, Message, MessageType } from "./connection";
 import { Logger } from "@main/logger";
 export default class GatewayModule implements BaseModule {
 	public readonly name?: string = "Gateway Module";
@@ -21,15 +21,23 @@ export default class GatewayModule implements BaseModule {
 		});
 		this.wss.on("connection", (ws, request) => {
 			var conn = new Connection(ws, request);
+			conn.sendMessage(Message.FromObject({
+				op: MessageType.hello,
+				d: {
+					heartbeat_interval:10000
+				}
+			}));
 			ws.on("message", (message: any) => {
-				console.log(message);
-				if (!Message.checkIsValid(message)) {
+				this.logger.debug(message);
+				message = conn.decodeMessage(message, false);
+				this.logger.debug(message);
+
+				if (!Message.CheckValidity(message)) {
 					this.logger.debugerror(
 						"Message from client: " + conn.ip + " is invalid."
 					);
 				} else {
 					console.log("received: %s", message);
-					message = conn.decodeMessage(message, false);
 					switch (message.op) {
 
 					}
@@ -46,49 +54,5 @@ export default class GatewayModule implements BaseModule {
 		next();
 	}
 }
-enum MessageType {
-	event,
-	heartbeat,
-	identify,
-	presence,
-	voice_state,
-	resume,
-	reconnect,
-	guild_member_request,
-	invalid_session,
-	hello,
-	heartbeat_ack,
-}
-class Message {
-	op: MessageType;
-	eventName: string;
-	sequence: number;
-	data: any;
-	constructor(obj) {
-		this.op = obj.op;
-		this.sequence = obj.s;
-		this.eventName = obj.t;
-		this.data = obj.d;
-	}
-	static checkIsValid(message) {
-		var successfulChecks = 0;
-		if (message.d != undefined) {
-			successfulChecks++;
-		}
-		if (message.op != undefined) {
-			successfulChecks++;
-		}
-		if (message.t != undefined) {
-			successfulChecks++;
-		}
-		if (message.s != undefined) {
-			successfulChecks++;
-		}
-		if (successfulChecks >= 0) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-}
+
 class ReadyPayload {}

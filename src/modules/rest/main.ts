@@ -8,7 +8,8 @@ import { ServerData } from "@main/serverdata";
 import SSLModule from "@main/modules/ssl/main";
 import { createProxyMiddleware, RequestHandler } from 'http-proxy-middleware';
 import { AppModifier } from "./appModifier";
-import cache from 'memory-cache';
+import httpErrorPages from "http-error-pages";
+import { ApiRouter } from "./api";
 
 export default class RestModule implements BaseModule {
 	public readonly name: string = "REST Api";
@@ -18,33 +19,41 @@ export default class RestModule implements BaseModule {
 	public httpsServer: https.Server;
 	private logger: Logger;
 	private appModifier: AppModifier
+	private api: ApiRouter;
 	private routerMiddleware: RequestHandler;
 	readonly dependencies = new Array<string>("ssl", "storage", "sessions");
 	async init(next: () => void) {
 		this.logger = new Logger("REST");
 		this.routerMiddleware = createProxyMiddleware(
-			{ target: 'https://162.159.135.232', changeOrigin: true,
+			{ target: 'https://162.159.135.232', changeOrigin: false,
 			headers: {
 			  'Host': 'discord.com' //cloudflare will let us go if we have a Host header
 			}, 
-			secure: false
+			secure: false,
+			onError: (error,req,res) => {
+				this.logger.debugerror(error);
+			}
 		})
 		this.appModifier = new AppModifier();
-		await this.appModifier.init();
+		this.appModifier.init();
+		this.api = new ApiRouter();
 		this.app = express();
 		this.app.use(express.json());
-		this.app.use("*", (req, res, next) => {
-			this.logger.debug(`${req.method} ${req.headers.host}${req.originalUrl}`);
-			this.logger.debug(JSON.stringify(req.body))
-			next();
-		});
+		if (process.env.DEBUG) {
+			this.app.post("*", (req, res, next) => {
+				this.logger.debug(`${req.method} ${req.headers.host}${req.originalUrl}`);
+				this.logger.debug(JSON.stringify(req.body))
+			});
+		}
 
 		var ssl = ServerData.getInstance().modules.getModule<SSLModule>("ssl").ssl;
 		this.httpsServer = https.createServer(ssl, this.app);
 		this.httpsServer.listen(ServerData.getInstance().settings.port);
+
 		this.app.get("/app", (req,res,next)=>{
 			this.appModifier.requestHandler(req,res,next);
 		});
+
 		this.app.get("/login", (req,res,next)=>{
 			this.appModifier.requestHandler(req,res,next);
 		});
@@ -52,6 +61,7 @@ export default class RestModule implements BaseModule {
 		this.app.get("/", (req,res,next)=>{
 			res.redirect('/app');
 		})
+
 		this.app.get("/assets/*", (req,res,next)=>{
 			try {
 				this.routerMiddleware(req,res,next);
@@ -60,19 +70,35 @@ export default class RestModule implements BaseModule {
 				this.logger.debugerror(e);
 			}
 		})
+
+		// todo: proper handling
 		this.app.get("/channels/*", (req,res,next)=>{
 			this.appModifier.requestHandler(req,res,next);
 		});
-		this.app.get('/api/v8/gateway',function (req, res) {
-			res.json({
-			  "url": `wss://127.0.0.1:${ServerData.getInstance().settings.port}/gateway`
-			})
-		});
-		//404 "page"
-		this.app.get("*", (req, res) => {
-			res.status(404).json({ message: "404: Not Found", code: 0 });
+
+		this.app.use('/api/:version/', this.api.router)
+
+		// 404 response
+		this.app.use(function(req, res, next){
+			if (req.accepts('html')) {
+				next();
+				return;
+			}
+			if (req.accepts('json')) {
+			  res.status(404).send({ message: "404: Not Found", code: 0 });
+			} else {
+				next();
+			}
 		});
 
+		// human readable 404 page
+		await httpErrorPages.express(this.app, {
+			lang: 'en_US',
+			payload: {
+				message: "Please try again later. ",
+				footer: '' //doesSupportServerExist? 'Try again later?' : 'Support server invite code: '+supportserver.invite.code
+			}
+		});
 		next();
 	}
 	stop(next: () => void) {
