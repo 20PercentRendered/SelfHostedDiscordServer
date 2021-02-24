@@ -35,12 +35,13 @@ export default class RestModule implements BaseModule {
 		this.app.use(express.json());
 		this.app.use("*", (req, res, next) => {
 			this.logger.debug(`${req.method} ${req.headers.host}${req.originalUrl}`);
+			this.logger.debug(JSON.stringify(req.body))
 			next();
 		});
 
 		var ssl = ServerData.getInstance().modules.getModule<SSLModule>("ssl").ssl;
 		this.httpsServer = https.createServer(ssl, this.app);
-		this.httpsServer.listen(8877);
+		this.httpsServer.listen(ServerData.getInstance().settings.port);
 		this.app.get("/app", (req,res,next)=>{
 			this.appModifier.requestHandler(req,res,next);
 		});
@@ -64,7 +65,7 @@ export default class RestModule implements BaseModule {
 		});
 		this.app.get('/api/v8/gateway',function (req, res) {
 			res.json({
-			  "url": "wss://127.0.0.1:8877/gateway"
+			  "url": `wss://127.0.0.1:${ServerData.getInstance().settings.port}/gateway`
 			})
 		});
 		//404 "page"
