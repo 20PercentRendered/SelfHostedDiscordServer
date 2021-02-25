@@ -27,7 +27,7 @@ export class ZlibCompressor implements IEncoder {
 	deflate: pako.Deflate;
 	inflate: pako.Inflate;
 	encode(data: any): Buffer {
-		this.deflate.push(data, zlib.Z_SYNC_FLUSH);
+		this.deflate.push(data, 2 ); // 2 = ZLIB_SYNC_FLUSH
 		return Buffer.from(this.deflate.result);
 	}
 	decode(data: any): pako.Data {
@@ -53,19 +53,23 @@ export class LZ4Compressor implements IEncoder {
 		return lz4.decode(data);
 	}
 }
-export function getSuitableEncoder(encoding: string) {
+export function getSuitableEncoder(encoding: string): IEncoder {
 	switch (encoding) {
 		case "etf":
 			return new ErlangEncoder();
 		case "json":
 			return new PassthroughEncoder();
+		default: 
+			return new PassthroughEncoder();
 	}
 }
-export function getSuitableCompressor(compression: string) {
+export function getSuitableCompressor(compression: string): IEncoder {
 	switch (compression) {
 		case "zlib-stream":
 			return new ZlibCompressor();
 		case "lz4-stream":
 			return new LZ4Compressor();
+		default: 
+			return new ZlibCompressor();
 	}
 }

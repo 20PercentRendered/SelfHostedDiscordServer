@@ -2,15 +2,12 @@ import { Logger } from "@main/logger";
 import ws from "ws";
 import http from "http";
 import url from "url";
+import querystring from "querystring";
 import {
 	getSuitableCompressor,
 	getSuitableEncoder,
 	IEncoder,
 } from "./encoding";
-
-var erlpack = require("erlpack");
-var zlib = require("zlib");
-var pako = require("pako");
 
 export class Connection {
 	public encoder: IEncoder;
@@ -20,16 +17,35 @@ export class Connection {
 	public ip: string;
 	private logger: Logger;
 	constructor(wsconn: ws, incomingmessage: http.IncomingMessage) {
-		var args = url.parse(incomingmessage.url);
-		this.hasToken = false;
-		this.encoder = getSuitableEncoder(args.query["encoding"]);
-		this.compressor = getSuitableCompressor(args.query);
-		this.logger = new Logger(
-			"GWClient (" + incomingmessage.socket.remoteAddress + ")"
-		);
-		this.WsConnection = wsconn;
-		this.ip = incomingmessage.connection.remoteAddress;
-		this.logger.debug("Init")
+		try {
+			this.logger = new Logger(
+				"GWClient (" + incomingmessage.socket.remoteAddress + ")"
+			);
+			var args = querystring.parse(url.parse(incomingmessage.url).query);
+
+			if (args["encoding"]) {
+				this.logger.debugerror("No encoding specified.");
+			} else {
+				// set encoding if not defined
+				args["encoding"] = "";
+			}
+
+			if (args["compression"]) {
+				this.logger.debugerror("No compression specified.");
+			} else {
+				// set compression if not defined
+				args["compression"] = "";
+			}
+
+			this.encoder = getSuitableEncoder(args["encoding"].toString());
+			this.compressor = getSuitableCompressor(args["compression"].toString());
+			this.hasToken = false;
+			this.WsConnection = wsconn;
+			this.ip = incomingmessage.connection.remoteAddress;
+		} catch (e) {
+			this.logger.debugerror("Error occurred while initializing a new connection.");
+			this.logger.debugerror(e);
+		}
 	}
 	/**
 	 * @param message A message as a Message object.
@@ -37,7 +53,7 @@ export class Connection {
 	 */
 	sendMessage(message: Message) {
 		this.logger.debug("Sending opcode " + message.op);
-		this.WsConnection.send(this.encodeMessage(message), (err) => {
+		this.WsConnection.send(this.encodeMessage(message.ToObject()), (err) => {
 			if (err) {
 				// It might cause performance problems to log all requests, as well as taking up a lot of disk space.
 				this.logger.debugerror(err.stack);
@@ -45,13 +61,24 @@ export class Connection {
 		});
 	}
 	encodeMessage(message): Buffer {
-		return this.compressor.encode(this.encoder.encode(message));
+		return this.compressor.encode(this.encoder.encode(JSON.stringify(message)));
 	}
-	decodeMessage(message, useZlib): any {
-		if (useZlib) {
-			return this.encoder.decode(this.compressor.decode(message));
-		} else {
-			return this.encoder.decode(message);
+	decodeMessage(message): any {
+		// yes, it's terrible
+		try {
+			return JSON.parse(message);
+		} catch (e) {
+			try {
+				return this.encoder.decode(this.compressor.decode(message));
+			} catch (e) {
+				this.logger.debugerror(e);
+				try {
+					return this.encoder.decode(message);
+				} catch (e2) {
+					this.logger.debugerror(e2);
+					return null;
+				}
+			}
 		}
 	}
 	onIdentify(message) {
@@ -85,6 +112,14 @@ export class Message {
 	}
 	static FromObject(obj) {
 		return new Message(obj.op, obj.d, obj.s,obj.t);
+	}
+	ToObject(): any {
+		return {
+			op: this.op, 
+			d: this.data, 
+			s: this.sequence, 
+			t: this.eventName
+		}
 	}
 	static CheckValidity(message) {
 		var successfulChecks = 0;

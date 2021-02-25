@@ -17,10 +17,11 @@ export default class GatewayModule implements BaseModule {
 			server: ServerData.getInstance().modules.getModule<RestModule>("rest")
 				.httpsServer,
 			perMessageDeflate: false, // disabling permessagedeflate as we handle compression ourselves
-			path: "/gateway"
+			path: '/gateway/'
 		});
 		this.wss.on("connection", (ws, request) => {
 			var conn = new Connection(ws, request);
+			this.logger.debug("Client "+ conn.ip+ " connected.");
 			conn.sendMessage(Message.FromObject({
 				op: MessageType.hello,
 				d: {
@@ -28,9 +29,9 @@ export default class GatewayModule implements BaseModule {
 				}
 			}));
 			ws.on("message", (message: any) => {
-				this.logger.debug(message);
-				message = conn.decodeMessage(message, false);
-				this.logger.debug(message);
+				this.logger.debug("m1:"+message);
+				message = conn.decodeMessage(message);
+				this.logger.debug("m2:"+message);
 
 				if (!Message.CheckValidity(message)) {
 					this.logger.debugerror(
