@@ -1,5 +1,5 @@
-import { Router } from "express";
+import express from "express";
 
 export class ExpressModule {
-    public router: Router
+    public app: express.Application;
 }

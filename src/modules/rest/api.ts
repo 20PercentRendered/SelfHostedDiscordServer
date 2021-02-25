@@ -1,19 +1,18 @@
 import { ExpressModule } from "@main/classes/ExpressModule";
-import express, { Router } from "express";
+import express from "express";
 
 export class ApiRouter implements ExpressModule {
-    public router: Router;
+    public app: express.Application;
     constructor () {
-        this.router = Router();
-        this.router.use(express.json());
-        this.router.post('/auth/login', (req,res) => {
-            res.json({token:"erewrweresre23536534536564465"}); //TODO: STUB
+        this.app = express();
+        this.app.use(express.json());
+        this.app.post('/auth/login', function (req,res) {
+            res.status(200).json({token:"erewrweresre23536534536564465"}); //TODO: STUB
         })
-        this.router.get('/gateway', (req, res) => {
-			res.json({
-			  "url": `wss://${req.headers.host}/gateway`
-			})
-		});
-
+        this.app.get('/gateway', (req, res) => {
+			    res.json({
+			      "url": `wss://${req.headers.host}/gateway`
+			    })
+		    });
     }
 }

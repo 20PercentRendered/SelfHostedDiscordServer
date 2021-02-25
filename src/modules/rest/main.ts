@@ -32,17 +32,22 @@ export default class RestModule implements BaseModule {
 			secure: false,
 			onError: (error,req,res) => {
 				this.logger.debugerror(error);
+				res.status(500);
 			}
 		})
+
 		this.appModifier = new AppModifier();
 		this.appModifier.init();
+
 		this.api = new ApiRouter();
 		this.app = express();
+
 		this.app.use(express.json());
 		if (process.env.DEBUG) {
-			this.app.post("*", (req, res, next) => {
+			this.app.use("*", (req, res, next) => {
 				this.logger.debug(`${req.method} ${req.headers.host}${req.originalUrl}`);
 				this.logger.debug(JSON.stringify(req.body))
+				next();
 			});
 		}
 
@@ -76,8 +81,8 @@ export default class RestModule implements BaseModule {
 			this.appModifier.requestHandler(req,res,next);
 		});
 
-		this.app.use('/api/:version/', this.api.router)
-
+		this.app.use('/api/:version/', this.api.app)
+		
 		// 404 response
 		this.app.use(function(req, res, next){
 			if (req.accepts('html')) {
@@ -96,7 +101,7 @@ export default class RestModule implements BaseModule {
 			lang: 'en_US',
 			payload: {
 				message: "Please try again later. ",
-				footer: '' //doesSupportServerExist? 'Try again later?' : 'Support server invite code: '+supportserver.invite.code
+				footer: ''
 			}
 		});
 		next();
