@@ -40,7 +40,9 @@ export default class GatewayModule implements BaseModule {
 				} else {
 					console.log("received: %s", message);
 					switch (message.op) {
-
+						case MessageType.heartbeat: 
+							conn.sendMessage(new Message(MessageType.heartbeat_ack, {}));
+						break;
 					}
 				}
 
