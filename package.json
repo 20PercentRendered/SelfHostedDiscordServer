@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "tsc && cd dist && node -r ts-node/register -r tsconfig-paths/register --trace-warnings main.js",
-    "debug": "tsc && cd dist && DEBUG=1 node -r ts-node/register -r tsconfig-paths/register --trace-warnings main.js",
+    "debug": "tsc && cd dist && DEBUG=1 node -r ts-node/register -r tsconfig-paths/register --trace-warnings --inspect main.js",
     "format": "prettier --loglevel warn --write \"**/*.{ts,tsx,css,md}\""
   },
   "repository": {
