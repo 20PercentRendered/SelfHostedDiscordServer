@@ -2,6 +2,7 @@ import { Connection } from "@main/modules/gateway/connection";
 
 export class Session {
 	public token: string;
+	public gatewayConnection: Connection;
 }
 export class SessionArray extends Array<Session> {
 	getSessionById(token: string) {

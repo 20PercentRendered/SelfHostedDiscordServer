@@ -3,6 +3,9 @@ import ws from "ws";
 import http from "http";
 import url from "url";
 import querystring from "querystring";
+import { Session } from "@main/classes/Session"
+import { ServerData } from "@main/serverdata"
+import SessionModule from "@main/modules/sessions/main"
 import {
 	getSuitableCompressor,
 	getSuitableEncoder,
@@ -12,7 +15,7 @@ import {
 export class Connection {
 	public encoder: IEncoder;
 	public compressor: IEncoder;
-	public hasToken: boolean;
+	public session: Session;
 	public WsConnection: ws;
 	public ip: string;
 	private logger: Logger;
@@ -39,7 +42,6 @@ export class Connection {
 
 			this.encoder = getSuitableEncoder(args["encoding"].toString());
 			this.compressor = getSuitableCompressor(args["compression"].toString());
-			this.hasToken = false;
 			this.WsConnection = wsconn;
 			this.ip = incomingmessage.connection.remoteAddress;
 		} catch (e) {
@@ -63,17 +65,17 @@ export class Connection {
 	encodeMessage(message): Buffer {
 		return this.compressor.encode(this.encoder.encode(JSON.stringify(message)));
 	}
-	decodeMessage(message): any {
+	decodeMessage(message): Message {
 		// yes, it's terrible
 		try {
-			return JSON.parse(message);
+			return Message.FromObject(JSON.parse(message));
 		} catch (e) {
 			try {
-				return this.encoder.decode(this.compressor.decode(message));
+				return Message.FromObject(this.encoder.decode(this.compressor.decode(message)));
 			} catch (e) {
 				this.logger.debugerror(e);
 				try {
-					return this.encoder.decode(message);
+					return Message.FromObject(this.encoder.decode(message));
 				} catch (e2) {
 					this.logger.debugerror(e2);
 					return null;
@@ -82,7 +84,7 @@ export class Connection {
 		}
 	}
 	onIdentify(message) {
-		//this.token = message.token;
+		ServerData.getInstance().modules.getModule<SessionModule>("sessions").sessions.getOrCreateSession(message.token).gatewayConnection = this;
 	}
 }
 export enum MessageType {

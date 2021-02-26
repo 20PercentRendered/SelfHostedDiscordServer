@@ -43,6 +43,9 @@ export default class GatewayModule implements BaseModule {
 						case MessageType.heartbeat: 
 							conn.sendMessage(new Message(MessageType.heartbeat_ack, {}));
 						break;
+						case MessageType.identify:
+							conn.onIdentify(message.data)
+						break;
 					}
 				}
 
