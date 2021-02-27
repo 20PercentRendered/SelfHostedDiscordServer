@@ -5,9 +5,11 @@ import path from "path";
 import glob from "glob";
 const logger = new Logger("Loader");
 import dgraph from "dependency-graph";
+import { Loader } from "@main/classes/Loader";
 
 var graph = new dgraph.DepGraph();
 var modules: ModuleArray = new ModuleArray();
+
 export function init() {
 	logger.info("Loading modules.");
 	glob
@@ -33,6 +35,7 @@ export function init() {
 		}
 	}
 	logger.debug("Module load order: " + graph.overallOrder());
+	ServerData.getInstance().loader = new Loader();
 	return loadModules(graph.overallOrder());
 }
 function getModuleName(module: BaseModule) {
@@ -45,10 +48,14 @@ function getModuleName(module: BaseModule) {
 function loadModules(uninitializedModules) {
 	var i = 0;
 	var failureCount = 0;
-	//self-controllable for loop
+	ServerData.getInstance().modules = new ModuleArray();
+	// self-controllable for loop
 	function executeNext() {
+		var item = uninitializedModules[i];
+		var curModule;
 		function next() {
-			ServerData.getInstance().modules = modules;
+			ServerData.getInstance().modules.push(curModule)
+			// ServerData.getInstance().modules = modules;
 			if (i == uninitializedModules.length - 1) {
 				if (failureCount > 0) {
 					logger.info(
@@ -63,13 +70,14 @@ function loadModules(uninitializedModules) {
 			i++;
 			executeNext();
 		}
-		var item = uninitializedModules[i];
 		logger.info(`Initializing ${item} module...`);
 		try {
 			var mod = modules.find((obj) => obj.intName == item);
+			curModule = mod;
 			mod.init(next);
 		} catch (e) {
-			logger.error(`Failed to load ${item} module: ${e}`);
+			logger.error(`Failed to load ${item} module: `);
+			logger.error(e)
 			failureCount++;
 		}
 	}
