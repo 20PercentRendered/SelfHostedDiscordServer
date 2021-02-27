@@ -1,8 +1,10 @@
 import { Connection } from "@main/modules/gateway/connection";
+import { User } from "./User";
 
 export class Session {
 	public token: string;
 	public gatewayConnection: Connection;
+	public user: User;
 }
 export class SessionArray extends Array<Session> {
 	getSessionById(token: string) {
