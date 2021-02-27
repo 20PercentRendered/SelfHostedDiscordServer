@@ -7,6 +7,7 @@ import util from "util";
 import randomNumber from "random-number-csprng"
 import bigInt from "big-integer"
 import { BaseModule } from "@main/classes/modules/BaseModule";
+import { ServerData } from "@main/serverdata";
 
 export default class SSLModule implements BaseModule {
 	public readonly name: string = "SSL Certificate Handler/Generator";
@@ -48,7 +49,7 @@ export default class SSLModule implements BaseModule {
 			}).catch((err)=>{
 				logger.error(err);
 				logger.error("Exiting as SSL is required and keys failed to generate." );
-				process.exit(1);
+				ServerData.getInstance().loader.forceShutdown("SSL fail")
 			})
 		}
 	}

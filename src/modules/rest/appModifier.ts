@@ -13,9 +13,9 @@ export class AppModifier {
         this.TryGetApp(10, 0).then((value)=>{
             this.app = value;
         }).catch((err)=>{
-            console.error("Couldn't contact discord's server to fetch app. \nCheck your connection?")
-            console.error(err);
-            process.exit(1);
+            this.logger.error("Couldn't contact discord's server to fetch app. \nCheck your connection?")
+            this.logger.error(err);
+            ServerData.getInstance().loader.forceShutdown("Discord app could not be fetched.")
         });
 
     }

@@ -7,7 +7,7 @@ export class Loader {
     async requestShutdown(reason) {
         var modulesToStop = [];
         ServerData.getInstance().modules.forEach(async (mod)=>{
-            console.log("Stopping "+mod.name || mod.intName)
+            this.logger.info("Stopping "+mod.name || mod.intName)
             modulesToStop.push(this.stopModule(mod));
         })      
         Promise.all(modulesToStop).then((value)=>{
@@ -25,7 +25,7 @@ export class Loader {
         })
     }
     forceShutdown(reason) {
-        console.log("A forced shutdown was executed. Data was not saved. Reason: "+reason)
+        this.logger.info("A forced shutdown was executed. Data was not saved. Reason: "+reason)
         process.exit(1);
     }
     constructor () {
