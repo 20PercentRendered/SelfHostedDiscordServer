@@ -1,13 +1,14 @@
 import { Settings } from "@main/classes/Settings";
 import { Logger } from "@main/logger";
 import { ModuleArray } from "@main/classes/modules/BaseModule";
+import { Loader } from "@main/classes/Loader";
 
 export class ServerData {
 	// Static property to store an instance
 	private static instance: ServerData = new ServerData();
 	public modules: ModuleArray;
 	public settings: Settings;
-	private logger: Logger;
+	public loader: Loader;
 
 	// Constructor is private!
 	private constructor() {
