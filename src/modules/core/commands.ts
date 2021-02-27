@@ -1,5 +1,6 @@
 import { Command } from "@main/classes/Command";
 import { Logger } from "@main/logger";
+import { ServerData } from "@main/serverdata";
 
 const fs = require("fs"),
 	path = require("path"),
@@ -55,7 +56,7 @@ export class CommandLibrary {
 		});
 		myRL.on("SIGINT", (rl) => {
 			logger.warn("Shutting down");
-			process.exit(0);
+			ServerData.getInstance().loader.requestShutdown("SIGINT received")
 		});
 	}
 	registerCommand(name, cb) {
