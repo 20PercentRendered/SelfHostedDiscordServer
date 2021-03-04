@@ -39,7 +39,6 @@ export default class GatewayModule implements BaseModule {
 			ws.on("message", (message: any) => {
 				this.logger.debug("m1:"+message);
 				message = conn.decodeMessage(message);
-				this.logger.debug("m2:"+message);
 
 				if (!Message.CheckValidity(message)) {
 					this.logger.debugerror(
