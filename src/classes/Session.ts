@@ -7,11 +7,11 @@ export class Session {
 	public user: User;
 }
 export class SessionArray extends Array<Session> {
-	getSessionById(token: string) {
+	getWithToken(token: string) {
 		return this.find((obj) => obj.token == token);
 	}
-	getOrCreateSession(token: string) {
-		var session = this.getSessionById(token);
+	getOrCreate(token: string) {
+		var session = this.getWithToken(token);
 		if (session) {
 			return session;
 		} else {

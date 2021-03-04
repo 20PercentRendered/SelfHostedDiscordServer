@@ -11,6 +11,7 @@ import {
 	getSuitableEncoder,
 	IEncoder,
 } from "./encoding";
+import StorageModule from "../storage/main";
 
 export class Connection {
 	public encoder: IEncoder;
@@ -84,7 +85,13 @@ export class Connection {
 		}
 	}
 	onIdentify(message) {
-		ServerData.getInstance().modules.getModule<SessionModule>("sessions").sessions.getOrCreateSession(message.token).gatewayConnection = this;
+		this.session = ServerData.getInstance().modules.getModule<SessionModule>("sessions").sessions.getOrCreate(message.token);
+		this.session.user = ServerData.getInstance().modules.getModule<StorageModule>("storage").userDatabase.database.find((value)=>{
+			if (message.token.includes(value.tokenFirstPart)) {
+				return value;
+			}
+ 		})
+		this.session.gatewayConnection = this;
 	}
 }
 export enum MessageType {

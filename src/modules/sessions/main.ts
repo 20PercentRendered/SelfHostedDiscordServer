@@ -14,4 +14,11 @@ export default class SessionModule implements BaseModule {
 	stop(next: () => void) {
 		next();
 	}
+	verifyToken(token) {
+		if (this.sessions.getWithToken(token)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
