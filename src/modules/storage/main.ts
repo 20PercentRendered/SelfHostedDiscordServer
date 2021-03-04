@@ -5,11 +5,13 @@ import fs from "fs";
 import { ServerData } from "@main/serverdata";
 import { BaseModule } from "@main/classes/modules/BaseModule";
 import CoreModule from "@main/modules/core/main";
+import { User } from "@main/classes/User";
 
 export default class StorageModule implements BaseModule {
 	public readonly name: string = "Storage Module";
 	public readonly intName: string = "storage";
 	public readonly version: number = 1;
+	public userDatabase: Database<User>;
 	readonly dependencies = new Array<string>("core");
 	private instances = [];
 	private logger: Logger;
@@ -17,31 +19,29 @@ export default class StorageModule implements BaseModule {
 		FSStorage.register();
 		ServerData.getInstance()
 			.modules.getModule<CoreModule>("core")
-			.registerCommand("savedbs", this.saveDatabases);
+			.registerCommand("savedbs", ()=>{
+				this.saveDatabases();
+			});
 		this.logger = new Logger("Storage");
 		if (!fs.existsSync("data")){
 			fs.mkdirSync("data");
 		}
+		this.userDatabase = this.getDB<User>("users");
 		this.logger.info("Storage Initialized.");
-		try {
-			this.getDB("test");
-		} catch (e) {
-			this.logger.error(e);
-		}
 		setInterval(()=>{
 			this.logger.info("Saving databases.")
 			this.saveDatabases();
 		}, ServerData.getInstance().settings.autosaveDelay*60000)
 		next();
 	}
-	getDB(name) {
+	getDB<T1>(name): Database<T1> {
 		for (var i in this.instances) {
 			if (this.instances[i].name == name) {
 				return this.instances[i];
 			}
 		}
 		this.logger.info(`Loading database '${name}'.`);
-		var db = new Database(name);
+		var db = new Database<T1>(name);
 		this.instances.push(db);
 		return db;
 	}
@@ -60,39 +60,38 @@ export default class StorageModule implements BaseModule {
 		});
 	})}
 	stop(next: () => void) {
-		this.saveDatabases();
-		next();
+		this.saveDatabases().finally(()=>{
+			next();
+		});
 	}
 }
-export class Database {
-	public name: string;
-	public items: Collection<object, object, object>;
+export class Database<T1 extends any> {
+	public readonly name: string;
 	private databaseFile: string;
-	private database: Loki;
+	public database: Array<T1>;
 	private logger: Logger;
 	constructor(name) {
 		this.name = name;
-		this.databaseFile = process.cwd() + "/data/" + this.name + ".db";
-		this.database = new Loki(this.databaseFile, {
-			serializationMethod: "pretty",
-		});
-		this.items = this.database.addCollection("main");
 		this.logger = new Logger(`${this.name}_DB`);
-		this.init();
-	}
-	async init() {
-		await this.database.initializePersistence({
-			autoload: fs.existsSync(this.databaseFile), // autoload only if file exists
-			adapter: new FSStorage(),
-			autosave: false // we do autosaving ourselves
-		});
+		this.databaseFile = process.cwd() + "/data/" + this.name + ".db";
+		try {
+			this.database = JSON.parse(fs.readFileSync(this.databaseFile).toString())
+		} catch (e) {
+			this.logger.error("Failed to load from disk. Error: ")
+			this.logger.error(e);
+			this.database = new Array<T1>();
+		}
+		if (JSON.stringify(this.database) == "{}") {
+			this.database = new Array<T1>();
+		}
 	}
 	toString() {
 		return this.name;
 	}
 	save(): Promise<void> {
 		return new Promise((resolve, reject)=>{
-			this.database.saveDatabase().then(()=>{
+			fs.promises.writeFile(this.databaseFile, JSON.stringify(this.database, null, 4))
+			.then(() => {
 				this.logger.info(`Saved ${this.name}`);
 				resolve();
 			}).catch((e)=>{
