@@ -9,7 +9,10 @@ import SSLModule from "@main/modules/ssl/main";
 import { createProxyMiddleware, RequestHandler } from 'http-proxy-middleware';
 import { AppModifier } from "./appModifier";
 import httpErrorPages from "http-error-pages";
-import { ApiRouter } from "./api";
+import { AuthorizedApiRouter } from "./AuthorizedApi";
+import { UnauthorizedApiRouter } from "./UnauthorizedApi";
+import SessionModule from "../sessions/main";
+import { CdnRouter } from "./cdn";
 
 export default class RestModule implements BaseModule {
 	public readonly name: string = "REST Api";
@@ -19,7 +22,9 @@ export default class RestModule implements BaseModule {
 	public httpsServer: https.Server;
 	private logger: Logger;
 	private appModifier: AppModifier
-	private api: ApiRouter;
+	private api: AuthorizedApiRouter;
+	private uapi: UnauthorizedApiRouter;
+	private cdn: CdnRouter;
 	private routerMiddleware: RequestHandler;
 	readonly dependencies = new Array<string>("ssl", "storage", "sessions");
 	async init(next: () => void) {
@@ -39,12 +44,20 @@ export default class RestModule implements BaseModule {
 		this.appModifier = new AppModifier();
 		this.appModifier.init();
 
-		this.api = new ApiRouter();
+		this.api = new AuthorizedApiRouter();
+		this.uapi = new UnauthorizedApiRouter();
+		this.cdn = new CdnRouter();
+
 		this.app = express();
 
-		this.app.use(express.json());
+		this.app.use(express.json({limit: '100mb'})); // 100mb limit for profile images, uploads, TODO: use config, allow for profile picture and message endpoint only
+													  // shouldn't even be used here?
 		if (process.env.DEBUG) {
 			this.app.use("*", (req, res, next) => {
+				if (req.originalUrl.includes('/science')) {
+					next();
+					return;
+				}
 				this.logger.debug(`${req.method} ${req.headers.host}${req.originalUrl}`);
 				this.logger.debug(JSON.stringify(req.body))
 				next();
@@ -56,6 +69,18 @@ export default class RestModule implements BaseModule {
 		this.httpsServer.listen(ServerData.getInstance().settings.port);
 
 		this.app.get("/app", (req,res,next)=>{
+			this.appModifier.requestHandler(req,res,next);
+		});
+
+		this.app.get("/guild-discovery", (req,res,next)=>{
+			this.appModifier.requestHandler(req,res,next);
+		});
+
+		this.app.get("/store", (req,res,next)=>{
+			this.appModifier.requestHandler(req,res,next);
+		});
+
+		this.app.get("/register", (req,res,next)=>{
 			this.appModifier.requestHandler(req,res,next);
 		});
 
@@ -75,27 +100,30 @@ export default class RestModule implements BaseModule {
 				this.logger.debugerror(e);
 			}
 		})
-
-		// todo: proper handling
 		this.app.get("/channels/*", (req,res,next)=>{
 			this.appModifier.requestHandler(req,res,next);
 		});
-
-		this.app.use('/api/:version/', this.api.app)
-		
-		// 404 response
-		this.app.use(function(req, res, next){
-			if (req.accepts('html')) {
-				next();
-				return;
-			}
-			if (req.accepts('json')) {
-			  res.status(404).send({ message: "404: Not Found", code: 0 });
+		this.app.use('/api/download', (req,res)=>{
+			res.redirect(ServerData.getInstance().settings.clientDownloadLink)
+		})
+		this.app.use('/api/:version/', this.uapi.app, (req,res,next)=>{
+			var isValid = false;
+			const token = req.headers.authorization;
+			if (!token) {
+				isValid = false;
 			} else {
+				isValid = ServerData.getInstance().modules.getModule<SessionModule>("sessions").verifyToken(token);
+			}
+			if (!isValid) {
+				res.status(401).send({ message: "401: Unauthorized", code: 0 });
+			} else {
+				res.session = ServerData.getInstance().modules.getModule<SessionModule>("sessions").sessions.getWithToken(token);
 				next();
 			}
-		});
-
+		}, this.api.app, (req,res,next)=>{
+			res.status(404).send({ message: "404: Not Found", code: 0 });
+		})
+		this.app.use("/cdn", this.cdn.app);
 		// human readable 404 page
 		await httpErrorPages.express(this.app, {
 			lang: 'en_US',
