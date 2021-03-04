@@ -19,50 +19,16 @@ export class AuthorizedApiRouter implements ExpressModule {
         this.guilds = ServerData.getInstance().modules.getModule<StorageModule>("storage").getDB<Guild>("guilds"); 
         this.app.patch('/users/@me', (req,res) => {
             if (req.body.avatar) {
-                var randomPart = SSLModule.generateSecureRandom(25)
-                var directory =  `${process.cwd()}/data/cdn/avatars/${res.session.user.id}`
-                var fileName = `${directory}/${randomPart}.png`;
-                try {
-                    // Waiting for fs.exists.......
-                    // Duplicate code here I come!
-                    var base64Data = req.body.avatar.replace(/^data:image\/png;base64,/, "");
-                    base64Data +=  base64Data.replace('+', ' ');
-                    var binaryData = Buffer.from(base64Data, 'base64').toString('binary');
-
-                    fs.access(directory).then(()=>{
-                        fs.writeFile(fileName, binaryData, "binary").then(()=>{
-                            res.session.user.safe.avatar = randomPart;
-                            res.session.user.unsafe.avatar = randomPart;
-                            res.json(res.session.user.unsafe)
-                            return;
-                        }).catch((e)=>{
-                            this.logger.debugerror(e);
-                            res.status(500).json(new BackendError("","An error occurred.").get());
-                            return;
-                        })
-                    }).catch(()=>{
-                        fs.mkdir(directory, { recursive: true }).then(()=>{
-                            fs.writeFile(fileName, binaryData, "binary").then(()=>{
-                                res.session.user.safe.avatar = randomPart;
-                                res.session.user.unsafe.avatar = randomPart;
-                                res.json(res.session.user.unsafe)
-                                return;
-                            }).catch((e)=>{
-                                this.logger.debugerror(e);
-                                res.status(500).json(new BackendError("","An error occurred.").get());
-                                return;
-                            })
-                        }).catch((e)=>{
-                            this.logger.debugerror(e);
-                            res.status(500).json(new BackendError("","An error occurred.").get());
-                            return;
-                        })
-                    });
-                } catch (e) {
+                this.saveImageFromBase64(req.body.avatar, `avatars/${res.session.user.id}/`).then((cdnToken)=>{
+                    res.session.user.safe.avatar = cdnToken;
+                    res.session.user.unsafe.avatar = cdnToken;
+                    res.json(res.session.user.unsafe)
+                }).catch((e)=>{
                     this.logger.debugerror(e);
                     res.status(500).json(new BackendError("","An error occurred.").get());
                     return;
-                } 
+                })
+                return;
             }
             if (req.body.new_password) {
                 if (res.session.user.password==req.body.password) {
@@ -78,6 +44,7 @@ export class AuthorizedApiRouter implements ExpressModule {
                     res.json(res.session.user.unsafe);
                     return;
                 }
+                return;
             }
             res.sendStatus(404);
         })
@@ -152,6 +119,42 @@ export class AuthorizedApiRouter implements ExpressModule {
                 this.logger.debugerror(e)
                 res.status(500).json({message: "Guild generation failed.", code: 0});
             })
+        })
+    }
+    saveImageFromBase64(base64in, cdnPath): Promise<string> {
+        return new Promise((resolve,reject)=>{
+            var randomPart = SSLModule.generateSecureRandom(25)
+            var directory =  `${process.cwd()}/data/cdn/${cdnPath}`
+            var fileName = `${directory}/${randomPart}`;
+            try {
+                // Waiting for fs.exists.......
+                // Duplicate code here I come!
+    
+                // remove base64ness
+                var base64Data = base64in.split(',').pop();
+                base64Data +=  base64Data.replace('+', ' ');
+                var binaryData = Buffer.from(base64Data, 'base64').toString('binary');
+                fileName += "."+base64in.substring("data:image/".length, base64in.indexOf(";base64"));
+                fs.access(directory).then(()=>{
+                    fs.writeFile(fileName, binaryData, "binary").then(()=>{
+                        resolve(randomPart);
+                    }).catch((e)=>{
+                        reject(e);
+                    })
+                }).catch(()=>{
+                    fs.mkdir(directory, { recursive: true }).then(()=>{
+                        fs.writeFile(fileName, binaryData, "binary").then(()=>{
+                           resolve(randomPart);
+                        }).catch((e)=>{
+                            reject(e);
+                        })
+                    }).catch((e)=>{
+                        reject(e);
+                    })
+                });
+            } catch (e) {
+                reject(e);
+            } 
         })
     }
 }
