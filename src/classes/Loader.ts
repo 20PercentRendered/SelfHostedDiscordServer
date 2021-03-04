@@ -16,6 +16,10 @@ export class Loader {
             this.logger.warn("Some modules failed to stop gracefully.")
             process.exit(0);
         })
+        // wait 5 seconds, and then force shutdown.
+        setTimeout(() => {
+            this.forceShutdown("Graceful shutdown failed.")
+        }, 5000);
     }
     private stopModule(module: BaseModule): Promise<void> {
         return new Promise((resolve, reject)=>{
