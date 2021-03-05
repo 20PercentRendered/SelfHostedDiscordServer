@@ -5,6 +5,7 @@ export class Session {
 	public token: string;
 	public gatewayConnection: Connection;
 	public user: User;
+	public sessionId: string;
 }
 export class SessionArray extends Array<Session> {
 	getWithToken(token: string) {

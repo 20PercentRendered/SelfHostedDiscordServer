@@ -59,6 +59,7 @@ export default class GatewayModule implements BaseModule {
 							voiceState.self_deaf = message.data.self_deaf;
 							voiceState.self_video = message.data.self_video;
 							voiceState.self_mute = message.data.self_mute;
+							voiceState.session_id = conn.session.sessionId
 							conn.sendMessage(new Message(MessageType.event, voiceState, null, "VOICE_STATE_UPDATE"))
 							break;
 						case MessageType.identify:
@@ -76,7 +77,7 @@ export default class GatewayModule implements BaseModule {
 									},
 									tutorial: new Tutorial(),
 									users: [],
-									session_id: SSLModule.generateSecureRandom(20),
+									session_id: "",
 									required_action: "LOGOUT",
 									relationships: [],
 									read_state: {
@@ -98,9 +99,10 @@ export default class GatewayModule implements BaseModule {
 										}
 									},
 									connected_accounts: [],
-									analytics_token: SSLModule.generateSecureRandom(20)
+									analytics_token: ""
 								}, null, "READY"))
 							} else {
+								conn.session.sessionId = SSLModule.generateSecureRandom(20);
 								conn.sendMessage(new Message(MessageType.event, {
 									v: 8,
 									user_settings: conn.session.user.settings,
@@ -110,7 +112,7 @@ export default class GatewayModule implements BaseModule {
 									user: conn.session.user.unsafe,
 									tutorial: conn.session.user.tutorial,
 									users: [],
-									session_id: SSLModule.generateSecureRandom(20),
+									session_id: conn.session.sessionId,
 									required_action: "",
 									relationships: [],
 									read_state: {
