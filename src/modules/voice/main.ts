@@ -19,11 +19,17 @@ export default class InternalVoiceModule implements BaseModule {
     public router: Router;
     public roomList = new Map()
     public connections: VoiceConnection[];
+    public turnserver: any;
     async init(next: () => void) {
         this.logger = new Logger("Voice Gateway");
 		this.wss = new ws.Server({
 			noServer: true
         });
+        this.turnserver = new Turn({
+            // set options
+            authMech: 'none'
+        });
+        this.turnserver.start();
         this.connections = new Array<VoiceConnection>();
         this.worker = await createWorker({logLevel: "debug", logTags: [
             "rtcp",
