@@ -100,7 +100,7 @@ export default class SSLModule implements BaseModule {
 	static generateSecureRandom(length: number): string {
 		return crypto.randomBytes(length).toString('hex');
 	}
-    generateRandomNumbers(length: number): Promise<number> {
+    static generateRandomNumbers(length: number): Promise<number> {
         var i: number;
         var min = "1";
         var max = "9";

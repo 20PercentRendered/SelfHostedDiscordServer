@@ -48,13 +48,25 @@ export class AuthorizedApiRouter implements ExpressModule {
             }
             res.sendStatus(404);
         })
+        this.app.get('/gateway/bot', (req,res)=>{
+            res.json({
+                url: `wss://${req.headers.host}/gateway`,
+                shards: 1,
+                session_start_limit: {
+                  total: 1000,
+                  remaining: 999,
+                  reset_after: 14400000,
+                  max_concurrency: 1
+                }
+              })
+        })
         this.app.patch('/users/@me/settings', (req,res)=>{
             res.session.user.settings = Object.assign(res.session.user.settings, req.body);
             res.sendStatus(200);
         })
         this.app.get('/guilds/:guildId/regions', (req,res)=>{
             res.json([
-                new GuildRegion("intenal","Internal ServCord")
+                new GuildRegion("internal","Internal ServCord")
             ])
         })
         this.app.use('/guilds/:serverId/templates', (req,res)=>{

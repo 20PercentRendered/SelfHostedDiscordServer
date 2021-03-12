@@ -7,6 +7,7 @@ import { Session } from "@main/classes/Session"
 import { ServerData } from "@main/serverdata"
 import SessionModule from "@main/modules/sessions/main"
 import {
+	ErlangEncoder,
 	getSuitableCompressor,
 	getSuitableEncoder,
 	IEncoder,
@@ -23,26 +24,29 @@ export class Connection {
 	constructor(wsconn: ws, incomingmessage: http.IncomingMessage) {
 		try {
 			this.logger = new Logger(
-				"GWClient (" + incomingmessage.socket.remoteAddress + ")"
+				`GWClient (${incomingmessage.socket.remoteAddress})`
 			);
 			var args = querystring.parse(url.parse(incomingmessage.url).query);
-
+			console.log(args["encoding"].toString())
+			console.log(args["compress"].toString())
 			if (args["encoding"]) {
-				this.logger.debugerror("No encoding specified.");
+
 			} else {
+				this.logger.debugerror("No encoding specified.");
 				// set encoding if not defined
 				args["encoding"] = "";
 			}
 
-			if (args["compression"]) {
-				this.logger.debugerror("No compression specified.");
+			if (args["compress"]) {
+				
 			} else {
+				this.logger.debugerror("No compression specified.");
 				// set compression if not defined
-				args["compression"] = "";
+				args["compress"] = "";
 			}
 
 			this.encoder = getSuitableEncoder(args["encoding"].toString());
-			this.compressor = getSuitableCompressor(args["compression"].toString());
+			this.compressor = getSuitableCompressor(args["compress"].toString());
 			this.WsConnection = wsconn;
 			this.ip = incomingmessage.connection.remoteAddress;
 		} catch (e) {
@@ -64,7 +68,11 @@ export class Connection {
 		});
 	}
 	encodeMessage(message): Buffer {
-		return this.compressor.encode(this.encoder.encode(JSON.stringify(message)));
+		if (this.encoder instanceof ErlangEncoder) {
+			return this.compressor.encode(this.encoder.encode(message));
+		} else {
+			return this.compressor.encode(this.encoder.encode(JSON.stringify(message)));
+		}
 	}
 	decodeMessage(message): Message {
 		// yes, it's terrible

@@ -9,11 +9,14 @@ export class ServerData {
 	public modules: ModuleArray;
 	public settings: Settings;
 	public loader: Loader;
+	public publicIp: string;
+    public internalIps: string[];
 
 	// Constructor is private!
 	private constructor() {
 		this.modules = new ModuleArray();
 		this.settings = new Settings();
+		this.internalIps = new Array<string>();
 	}
 
 	// Static method to retreive the singleton instance

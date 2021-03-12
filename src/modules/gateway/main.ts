@@ -14,7 +14,7 @@ export default class GatewayModule implements BaseModule {
 	public readonly name?: string = "Gateway Module";
 	public readonly intName: string = "gateway";
 	public readonly version?: number = 1;
-	public readonly dependencies = new Array<string>("rest", "sessions", "storage");
+	public readonly dependencies = new Array<string>("sessions", "storage", "voice");
 	public wss: ws.Server;
 	private logger: Logger;
 	private guilddb: Database<Guild>;
@@ -22,13 +22,11 @@ export default class GatewayModule implements BaseModule {
 		this.logger = new Logger("Gateway");
 		this.guilddb = ServerData.getInstance().modules.getModule<StorageModule>("storage").getDB<Guild>("guilds");
 		this.wss = new ws.Server({
-			server: ServerData.getInstance().modules.getModule<RestModule>("rest")
-				.httpsServer,
+			noServer: true,
 			perMessageDeflate: false, // disabling permessagedeflate as we handle compression ourselves
-			path: '/gateway/'
 		});
-		this.wss.on("connection", (ws, request) => {
-			var conn = new Connection(ws, request);
+		this.wss.on("connection", (ws, req) => {
+			var conn = new Connection(ws, req);
 			this.logger.debug("Client "+ conn.ip+ " connected.");
 			conn.sendMessage(Message.FromObject({
 				op: MessageType.hello,
@@ -51,7 +49,6 @@ export default class GatewayModule implements BaseModule {
 							conn.sendMessage(new Message(MessageType.heartbeat_ack, {}));
 							break;
 						case MessageType.voice_state:
-							conn.sendMessage(new Message(MessageType.event,new VoiceServerUpdatePayload(conn.session.token, "localhost:8877/voice", message.data.guild_id), null, "VOICE_SERVER_UPDATE"))
 							var voiceState = new VoiceState(
 								new GuildMember(conn.session.user.safe), 
 								message.data.guild_id, 
@@ -61,6 +58,11 @@ export default class GatewayModule implements BaseModule {
 							voiceState.self_mute = message.data.self_mute;
 							voiceState.session_id = conn.session.sessionId
 							conn.sendMessage(new Message(MessageType.event, voiceState, null, "VOICE_STATE_UPDATE"))
+							conn.sendMessage(new Message(MessageType.event, 
+								new VoiceServerUpdatePayload(
+									conn.session.token, `${req.headers.host}/voice`, 
+									message.data.guild_id), 
+								null, "VOICE_SERVER_UPDATE"))
 							break;
 						case MessageType.identify:
 							try {
@@ -89,7 +91,7 @@ export default class GatewayModule implements BaseModule {
 									guilds: [],
 									guild_join_requests: [],
 									guild_experiments: [],
-									geo_ordered_rtc_regions: ["internal"],
+									geo_ordered_rtc_regions: [],
 									friend_suggestion_count: 0,
 									experiments: [],
 									country_code: "",

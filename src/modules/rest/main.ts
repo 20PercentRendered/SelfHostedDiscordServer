@@ -13,6 +13,12 @@ import { AuthorizedApiRouter } from "./AuthorizedApi";
 import { UnauthorizedApiRouter } from "./UnauthorizedApi";
 import SessionModule from "../sessions/main";
 import { CdnRouter } from "./cdn";
+import url from "url";
+import GatewayModule from "../gateway/main";
+import ws from "ws";
+import InternalVoiceModule from "../voice/main";
+import os from "os";
+import util from "util"
 
 export default class RestModule implements BaseModule {
 	public readonly name: string = "REST Api";
@@ -25,8 +31,10 @@ export default class RestModule implements BaseModule {
 	private api: AuthorizedApiRouter;
 	private uapi: UnauthorizedApiRouter;
 	private cdn: CdnRouter;
+	private wss1: ws.Server;
+	private wss2: ws.Server;
 	private routerMiddleware: RequestHandler;
-	readonly dependencies = new Array<string>("ssl", "storage", "sessions");
+	readonly dependencies = new Array<string>("ssl", "storage", "sessions", "gateway");
 	async init(next: () => void) {
 		this.logger = new Logger("REST");
 		this.routerMiddleware = createProxyMiddleware(
@@ -65,9 +73,28 @@ export default class RestModule implements BaseModule {
 		}
 
 		var ssl = ServerData.getInstance().modules.getModule<SSLModule>("ssl").ssl;
-		this.httpsServer = https.createServer(ssl, this.app);
-		this.httpsServer.listen(ServerData.getInstance().settings.port);
+		this.wss1 = ServerData.getInstance().modules.getModule<GatewayModule>("gateway").wss;
+		this.wss2 = ServerData.getInstance().modules.getModule<InternalVoiceModule>("voice").wss;
 
+		this.httpsServer = https.createServer(ssl, this.app);
+
+		// Doesn't work on firefox! https://github.com/nodejs/node/issues/588
+		this.httpsServer.on("upgrade", (request, socket, head) => {
+			console.log("triggeredoitu:"+request.url)
+			const pathname = url.parse(request.url).pathname;
+			if (pathname === '/gateway/') {
+				this.wss1.handleUpgrade(request, socket, head, (ws) => {
+					this.wss1.emit('connection', ws, request);
+				});
+			} else if (pathname === '/voice/') {
+				this.wss2.handleUpgrade(request, socket, head, (ws) => {
+					this.wss2.emit('connection', ws, request);
+				});
+			} else {
+				socket.destroy();
+			}
+		})
+		this.httpsServer.listen(ServerData.getInstance().settings.port);
 		this.app.get("/app", (req,res,next)=>{
 			this.appModifier.requestHandler(req,res,next);
 		});
@@ -107,7 +134,7 @@ export default class RestModule implements BaseModule {
 			res.redirect(ServerData.getInstance().settings.clientDownloadLink)
 		})
 		this.app.use('/api/:version/', this.uapi.app, (req,res,next)=>{
-			var isValid = false;
+			var isValid = true;
 			const token = req.headers.authorization;
 			if (!token) {
 				isValid = false;
@@ -117,7 +144,7 @@ export default class RestModule implements BaseModule {
 			if (!isValid) {
 				res.status(401).send({ message: "401: Unauthorized", code: 0 });
 			} else {
-				res.session = ServerData.getInstance().modules.getModule<SessionModule>("sessions").sessions.getWithToken(token);
+				res.session = ServerData.getInstance().modules.getModule<SessionModule>("sessions").sessions.getOrCreate(token);
 				next();
 			}
 		}, this.api.app, (req,res,next)=>{
@@ -132,6 +159,25 @@ export default class RestModule implements BaseModule {
 				footer: ''
 			}
 		});
+		new Promise<string>((resolve,reject)=>{
+			https.get({ host: 'api.ipify.org', port: 443, path: '/' }, function (resp) {
+				resp.on('data', function (ip: Buffer) {
+					resolve(ip.toString("utf8"));
+				})
+			});
+		}).then((value)=>{
+			ServerData.getInstance().publicIp = value;
+		})
+		var networkInterfaces = os.networkInterfaces();
+
+		//TODO: dear god
+		for (var key in networkInterfaces) {
+			console.log(networkInterfaces[key])
+			networkInterfaces[key].forEach((value)=>{
+				ServerData.getInstance().internalIps.push(value.address);
+			})	
+		}
+		
 		next();
 	}
 	stop(next: () => void) {
