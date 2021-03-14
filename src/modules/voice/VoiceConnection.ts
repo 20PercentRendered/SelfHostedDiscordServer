@@ -1,7 +1,9 @@
+import { Logger } from '@main/logger';
 import { ServerData } from '@main/serverdata';
 import { Consumer, DtlsParameters, IceCandidate, IceParameters, MediaKind, Producer, Router, RtpCapabilities, RtpParameters, WebRtcTransport } from 'mediasoup/lib/types';
 import { stringify } from 'querystring';
 import * as sdpTransform from 'sdp-transform'; 
+import { Logform } from 'winston';
 import { Server } from 'ws';
 export class VoiceConnection {
     public sdp?: sdpTransform.SessionDescription;
@@ -16,6 +18,7 @@ export class VoiceConnection {
         iceCandidates: IceCandidate[],
         dtlsParameters: DtlsParameters
     }
+    public logger: Logger;
 
     private constructor () {
         this.transports = new Map()
@@ -28,6 +31,7 @@ export class VoiceConnection {
         conn.addTransport(transport);
         conn.transport = transport;
         conn.params = params;
+        conn.logger = new Logger(conn.transport.id);
         return conn;
     }
     static async createWebRtcTransport(router: Router) {
@@ -73,12 +77,12 @@ export class VoiceConnection {
 
         this.producers.set(producer.id, producer)
 
-        producer.on('transportclose', function() {
-            console.log(`---producer transport close--- name: ${this.name} producer_id: ${producer.id}`)
+        producer.on('transportclose', (() =>{
+            this.logger.debug(`---producer transport close--- producer_id: ${producer.id}`)
             producer.close()
             this.producers.delete(producer.id)
             
-        }.bind(this))
+        }).bind(this))
 
         return producer
     }
@@ -107,10 +111,10 @@ export class VoiceConnection {
 
         this.consumers.set(consumer.id, consumer)
 
-        consumer.on('transportclose', function() {
-            console.log(`---consumer transport close--- name: ${this.name} consumer_id: ${consumer.id}`)
+        consumer.on('transportclose', (() =>{
+            this.logger.debug(`---consumer transport close--- consumer_id: ${consumer.id}`)
             this.consumers.delete(consumer.id)
-        }.bind(this))
+        }).bind(this))
 
         return {
             consumer,

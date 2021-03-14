@@ -27,12 +27,13 @@ export class AppModifier {
             new ModificationData("ASSET_ENDPOINT",`${ip}`),
             new ModificationData("MEDIA_PROXY_ENDPOINT",`${ip}`),
             new ModificationData("WIDGET_ENDPOINT",`//${ip}/widget`),
+            new ModificationData("INVITE_HOST", `${ip}`),
             new ModificationData("MARKETING_ENDPOINT:",`${ip}`),
             new ModificationData("NETWORKING_ENDPOINT",`//${ip}/`),
             new ModificationData("RTC_LATENCY_ENDPOINT",`//${ip}/latency/rtc`),
             new ModificationData("ACTIVITY_APPLICATION_HOST",`//${ip}/activities`),
             new ModificationData("REMOTE_AUTH_ENDPOINT",`//${ip}/authgateway`),
-            new ModificationData("SENTRY_TAGS",{
+            new ModificationData("SENTRY_TAGS",{ // we don't want to give discord a bunch of reports about our client
                 "buildId":"",
                 "buildType":"normal"
             }),

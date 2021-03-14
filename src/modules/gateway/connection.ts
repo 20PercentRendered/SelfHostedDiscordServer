@@ -13,6 +13,7 @@ import {
 	IEncoder,
 } from "./encoding";
 import StorageModule from "../storage/main";
+import { Heartbeater } from "@main/utils/heartbeater";
 
 export class Connection {
 	public encoder: IEncoder;
@@ -27,8 +28,8 @@ export class Connection {
 				`GWClient (${incomingmessage.socket.remoteAddress})`
 			);
 			var args = querystring.parse(url.parse(incomingmessage.url).query);
-			console.log(args["encoding"].toString())
-			console.log(args["compress"].toString())
+			this.logger.debug("encoding "+args["encoding"].toString())
+			this.logger.debug("compress "+args["compress"].toString())
 			if (args["encoding"]) {
 
 			} else {

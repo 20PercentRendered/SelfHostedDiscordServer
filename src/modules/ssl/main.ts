@@ -73,7 +73,7 @@ export default class SSLModule implements BaseModule {
 		next();
     }
     generateSnowflake(): Promise<string> {
-        return new Promise((resolve,reject)=>{
+        return new Promise(async (resolve,reject)=>{
 			var time = bigInt(this.getDiscordEpochTime().shiftLeft(22));
 			// TODO: server ids etc
             resolve((time.toString()))
@@ -91,6 +91,15 @@ export default class SSLModule implements BaseModule {
 			resolve(`${this.clean(parts.join('.'))}.${this.clean(Buffer.from(SSLModule.generateSecureRandom(20)).toString('base64'))}`);
 		});
 	}
+	static generateRandomArray(numberCount: number, numberLength: number): Promise<Array<number>> {
+        return new Promise(async (resolve,reject)=>{
+			var array = new Array<number>(numberCount);
+			for (var i = 0; i<numberCount; i++) {
+				array.push(await SSLModule.generateRandomNumbers(numberLength));
+			}
+			resolve(array);
+		})
+    }
 	getBase64User(user) {
 		return this.clean(Buffer.from(user).toString('base64'));
 	}

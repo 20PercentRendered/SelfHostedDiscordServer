@@ -10,6 +10,7 @@ import SessionModule from "../sessions/main";
 import SSLModule from "../ssl/main";
 import { Guild, GuildMember, JoinedGuild, UnavailableGuild } from "@main/classes/Guild";
 import { VoiceServerUpdatePayload, VoiceState } from "@main/classes/Voice";
+import { Heartbeater } from "@main/utils/heartbeater";
 export default class GatewayModule implements BaseModule {
 	public readonly name?: string = "Gateway Module";
 	public readonly intName: string = "gateway";
@@ -27,13 +28,23 @@ export default class GatewayModule implements BaseModule {
 		});
 		this.wss.on("connection", (ws, req) => {
 			var conn = new Connection(ws, req);
+			var heartbeater = new Heartbeater(30000,5000)
 			this.logger.debug("Client "+ conn.ip+ " connected.");
 			conn.sendMessage(Message.FromObject({
 				op: MessageType.hello,
 				d: {
-					heartbeat_interval:99999999
+					heartbeat_interval:30000
 				}
 			}));
+			heartbeater.on("timeout",()=>{
+				this.logger.debug("timed out")
+				conn.WsConnection.close(4009)
+			})
+			heartbeater.on("send",()=>{
+				conn.sendMessage(new Message(MessageType.heartbeat_ack, {}));
+				this.logger.debug("sent hb")
+				heartbeater.sent();
+			})
 			ws.on("message", (message: any) => {
 				this.logger.debug("m1:"+message);
 				message = conn.decodeMessage(message);
@@ -43,10 +54,11 @@ export default class GatewayModule implements BaseModule {
 						"Message from client: " + conn.ip + " is invalid."
 					);
 				} else {
-					console.log("received: %s", message);
+					this.logger.debug("received: "+JSON.stringify(message));
 					switch (message.op) {
 						case MessageType.heartbeat: 
-							conn.sendMessage(new Message(MessageType.heartbeat_ack, {}));
+							this.logger.debug("receved hb")
+							heartbeater.received();
 							break;
 						case MessageType.voice_state:
 							var voiceState = new VoiceState(

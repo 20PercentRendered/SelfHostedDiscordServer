@@ -78,15 +78,17 @@ export default class RestModule implements BaseModule {
 
 		this.httpsServer = https.createServer(ssl, this.app);
 
-		// Doesn't work on firefox! https://github.com/nodejs/node/issues/588
+		// Works on firefox with a 99% success chance
 		this.httpsServer.on("upgrade", (request, socket, head) => {
-			console.log("triggeredoitu:"+request.url)
+			this.logger.debug("requested ws url:"+request.url)
 			const pathname = url.parse(request.url).pathname;
 			if (pathname === '/gateway/') {
+				this.logger.debug("requested gateway:")
 				this.wss1.handleUpgrade(request, socket, head, (ws) => {
 					this.wss1.emit('connection', ws, request);
 				});
 			} else if (pathname === '/voice/') {
+				this.logger.debug("requested voice server")
 				this.wss2.handleUpgrade(request, socket, head, (ws) => {
 					this.wss2.emit('connection', ws, request);
 				});
@@ -172,7 +174,7 @@ export default class RestModule implements BaseModule {
 
 		//TODO: dear god
 		for (var key in networkInterfaces) {
-			console.log(networkInterfaces[key])
+			this.logger.debug(JSON.stringify(networkInterfaces[key],null,4))
 			networkInterfaces[key].forEach((value)=>{
 				ServerData.getInstance().internalIps.push(value.address);
 			})	
