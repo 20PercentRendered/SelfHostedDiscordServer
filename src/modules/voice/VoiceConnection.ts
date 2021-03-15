@@ -25,36 +25,13 @@ export class VoiceConnection {
         this.consumers = new Map()
         this.producers = new Map()
     }
-    static async create(router: Router) {
+    static async create(router: Router, transport: WebRtcTransport, params: { id: string; iceParameters: IceParameters; iceCandidates: IceCandidate[]; dtlsParameters: DtlsParameters; }) {
         var conn = new VoiceConnection();
-        var { transport, params } = await VoiceConnection.createWebRtcTransport(router);
         conn.addTransport(transport);
         conn.transport = transport;
         conn.params = params;
         conn.logger = new Logger(conn.transport.id);
         return conn;
-    }
-    static async createWebRtcTransport(router: Router) {
-        const transport = await router.createWebRtcTransport({
-            listenIps: (()=>{
-                var ips = new Array<{ip: string, announcedIp?: string }>();
-                ips.push({ip: "0.0.0.0", announcedIp: ServerData.getInstance().publicIp})
-                ips.push({ip: "192.168.0.106"}) // use this if running locally, switch to your own private ipv4
-                return ips;
-            })(),
-            enableUdp: true,
-            enableTcp: true,
-            enableSctp: true
-        });
-        return {
-          transport,
-          params: {
-            id: transport.id,
-            iceParameters: transport.iceParameters,
-            iceCandidates: transport.iceCandidates,
-            dtlsParameters: transport.dtlsParameters
-          },
-        };
     }
 
     addTransport(transport: WebRtcTransport) {

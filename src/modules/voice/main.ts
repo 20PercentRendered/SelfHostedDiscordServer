@@ -98,6 +98,7 @@ export default class InternalVoiceModule implements BaseModule {
 				}
             ]
         });
+        var { transport, params } = await InternalVoiceModule.createWebRtcTransport(this.router);
         this.debugDumpIntervalHandle = setInterval(()=>{
             this.logger.debug("Connected voice id's:")
             this.logger.debug(this.connections.map((value)=>{
@@ -105,7 +106,7 @@ export default class InternalVoiceModule implements BaseModule {
             }))
         },5000)
 		this.wss.on("connection", async (ws, req) => {
-            var conn = await VoiceConnection.create(this.router);
+            var conn = await VoiceConnection.create(this.router,transport,params);
             this.connections.push(conn);
             this.port+=2;
             ws.send(this.encodeMessage({op:8,d:{v:5,heartbeat_interval:999999999}}));
@@ -255,6 +256,28 @@ export default class InternalVoiceModule implements BaseModule {
         this.router.close();
         this.worker.close();
         next();
+    }
+    static async createWebRtcTransport(router: Router) {
+        const transport = await router.createWebRtcTransport({
+            listenIps: (()=>{
+                var ips = new Array<{ip: string, announcedIp?: string }>();
+                ips.push({ip: "0.0.0.0", announcedIp: ServerData.getInstance().publicIp})
+                ips.push({ip: "192.168.0.106"}) // use this if running locally, switch to your own private ipv4
+                return ips;
+            })(),
+            enableUdp: true,
+            enableTcp: true,
+            enableSctp: true
+        });
+        return {
+          transport,
+          params: {
+            id: transport.id,
+            iceParameters: transport.iceParameters,
+            iceCandidates: transport.iceCandidates,
+            dtlsParameters: transport.dtlsParameters
+          },
+        };
     }
 
 }
