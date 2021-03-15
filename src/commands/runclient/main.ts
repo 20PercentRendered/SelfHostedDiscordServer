@@ -2,14 +2,14 @@ import { Command } from "@main/classes/Command";
 import { Logger } from "@main/logger";
 import { ServerData } from "@main/serverdata";
 
-const os = require("os"),
-	path = require("path"),
-	fs = require("fs"),
-	logger = new Logger("RunClientCommand"),
-	port = ServerData.getInstance().settings.port,
-	child_process = require("child_process");
+import os from "os";
+import path from "path";
+import fs from "fs";
+const	logger = new Logger("RunClientCommand")
+const	port = ServerData.getInstance().settings.port
+import child_process from "child_process";
 export default class RunClientCommand extends Command {
-	public readonly name: string = "RunClient";
+	public readonly name: string = "runclient";
 	private args: Array<string>;
 	run(args?: any) {
 		var discordpath;
@@ -39,7 +39,7 @@ export default class RunClientCommand extends Command {
 	constructor() {
 		super();
 		this.args = [
-			`--host-rules="MAP * 127.0.0.1:${port}"`,
+			`--host-rules="MAP discord.com 127.0.0.1:${port}"`,
 			"--ignore-certificate-errors",
 			"--allow-insecure-localhost",
 			"--disable-http-cache",
