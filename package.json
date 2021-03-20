@@ -75,5 +75,8 @@
   },
   "_moduleAliases": {
     "@main": ""
+  },
+  "eslintConfig": {
+    
   }
 }
