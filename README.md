@@ -14,7 +14,7 @@ A self hostable Discord server. Currently very alpha.
 4.  (Windows only) Microsoft visual c++ 
 
 ## Filing issues
-### You should file an issue if:
+### You should file an issue if
 1.  There is an error
 2.  You have a question
 ### To file an issue
