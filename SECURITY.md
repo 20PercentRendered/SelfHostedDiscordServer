@@ -13,4 +13,4 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-Use Github's vulnerability disclosing feature and describe thoroughly.
+Send me(onni.kukkonen77 (at) gmail.com) a mail with the title "servcord-server vulnerability" and describe the vulnerability thoroughly.
