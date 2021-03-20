@@ -20,6 +20,6 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "array-type": [true, "generic"]
+        "array-type": [1, "generic"]
     }
 }
