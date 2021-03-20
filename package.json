@@ -27,6 +27,7 @@
     "@lokidb/fs-storage": "^2.1.0",
     "@lokidb/loki": "^2.1.0",
     "@tryghost/vhost-middleware": "^1.0.8",
+    "@typescript-eslint/parser": "^4.18.0",
     "big-integer": "^1.6.48",
     "cheerio": "^1.0.0-rc.5",
     "colors": "^1.4.0",
@@ -76,7 +77,10 @@
   "_moduleAliases": {
     "@main": ""
   },
-  "eslintConfig": {
-    
+  "eslintConfig": { 
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ]
   }
 }
