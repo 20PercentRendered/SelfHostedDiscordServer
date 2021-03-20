@@ -13,7 +13,11 @@ A self hostable Discord server. Currently very alpha.
 3.  GNU compiler toolchain
 4.  (Windows only) Microsoft visual c++ 
 
-## Questions? Failing to run? 
+## Filing issues
+### You should file an issue if:
+1.  There is an error
+2.  You have a question
+### To file an issue
 1.  Open an issue and describe your issue/question clearly. 
 2.  (If applicable) Copy-and-paste the error message that you are getting
 3.  (If applicable) Attach a screenshot of the bug/error
