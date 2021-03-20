@@ -28,6 +28,7 @@ export default class RestModule implements BaseModule {
 	public httpsServer: https.Server;
 	private logger: Logger;
 	private appModifier: AppModifier
+	private devAppModifier: AppModifier;
 	private api: AuthorizedApiRouter;
 	private uapi: UnauthorizedApiRouter;
 	private cdn: CdnRouter;
@@ -51,6 +52,8 @@ export default class RestModule implements BaseModule {
 
 		this.appModifier = new AppModifier();
 		this.appModifier.init();
+		this.devAppModifier = new AppModifier();
+		this.devAppModifier.init("/developers");
 
 		this.api = new AuthorizedApiRouter();
 		this.uapi = new UnauthorizedApiRouter();
@@ -115,6 +118,14 @@ export default class RestModule implements BaseModule {
 
 		this.app.get("/login", (req,res,next)=>{
 			this.appModifier.requestHandler(req,res,next);
+		});
+
+		this.app.get("/invite/*", (req,res,next)=>{
+			this.appModifier.requestHandler(req,res,next);
+		});
+
+		this.app.get("/developers/*", (req,res,next)=>{
+			this.devAppModifier.requestHandler(req,res,next);
 		});
 
 		this.app.get("/", (req,res,next)=>{

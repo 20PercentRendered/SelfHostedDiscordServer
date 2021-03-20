@@ -9,8 +9,8 @@ export class AppModifier {
     constructor() {
         this.logger = new Logger("AppModifier");
     }
-    init(): void {
-        this.TryGetApp(10, 0).then((value)=>{
+    init(path: string = "/app"): void {
+        this.TryGetApp(10, 0, path).then((value)=>{
             this.app = value;
         }).catch((err)=>{
             this.logger.error("Couldn't contact discord's server to fetch app. \nCheck your connection?")
@@ -85,13 +85,13 @@ export class AppModifier {
             )
         ));
     }
-    GetApp() {
+    GetApp(path: string) {
         return new Promise<string>((resolve,reject)=>{
             var chunks = "";
             const req = https.request({
                 hostname: '162.159.135.232',
                 port: 443,
-                path: '/app',
+                path: path,
                 method: 'GET',
                 headers: {
                     Host: 'discord.com'
@@ -113,15 +113,15 @@ export class AppModifier {
             req.end()
         })
     }
-    TryGetApp(timesToRetry: number, timesRetried: number) {
+    TryGetApp(timesToRetry: number, timesRetried: number, path?: string) {
         return new Promise<string>((resolve,reject)=>{
             if (timesRetried>=timesToRetry) {
                 reject("Too many tries.")
             }
-            this.GetApp().then((value)=>{
+            this.GetApp(path).then((value)=>{
                 resolve(value);
             }).catch((err)=>{
-                this.TryGetApp(timesToRetry,timesRetried+1);
+                this.TryGetApp(timesToRetry,timesRetried+1,path);
             })
         })
     }

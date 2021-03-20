@@ -8,6 +8,13 @@ import SSLModule from "../ssl/main";
 import Turn from 'node-turn';
 import { VoiceConnection } from "./VoiceConnection";
 import { ServerData } from "@main/serverdata";
+
+// i have no idea how this even connects
+// i mean, i know nothing about webrtc and yet i have "voice connected"
+// but that's only for the browser client
+// noone knows how the official client does it
+// all i know is they've cloned the chromium webrtc code and done things to it
+// because if i delete discord_voice it connects fine
 export default class InternalVoiceModule implements BaseModule {
     public readonly name?: string = "Internal Voice Module";
     public readonly intName: string = "voice";
@@ -19,7 +26,6 @@ export default class InternalVoiceModule implements BaseModule {
     public router: Router;
     public roomList = new Map()
     public connections: VoiceConnection[];
-    public port: number;
     public turnserver: any;
     private debugDumpIntervalHandle: NodeJS.Timeout;
     async init(next: () => void) {
@@ -27,7 +33,6 @@ export default class InternalVoiceModule implements BaseModule {
 		this.wss = new ws.Server({
 			noServer: true
         });
-        this.port = 50000;
         this.turnserver = new Turn({
             // set options
             authMech: 'none'
@@ -99,6 +104,21 @@ export default class InternalVoiceModule implements BaseModule {
             ]
         });
         var { transport, params } = await InternalVoiceModule.createWebRtcTransport(this.router);
+        var rtpTransport = await this.router.createPlainTransport({ 
+            listenIp: '192.168.0.106',
+            rtcpMux: true,
+            enableSctp: true
+        });
+       
+        rtpTransport.on('trace', (trace) => {
+            console.log('trace', trace);
+        });
+        rtpTransport.on('tuple', (tuple) => {
+            console.log('tuple', tuple);
+        });
+        rtpTransport.on('rtcptuple', (rtcptuple) => {
+            console.log('rtcptuple', rtcptuple);
+        });
         this.debugDumpIntervalHandle = setInterval(()=>{
             this.logger.debug("Connected voice id's:")
             this.logger.debug(this.connections.map((value)=>{
@@ -107,8 +127,8 @@ export default class InternalVoiceModule implements BaseModule {
         },5000)
 		this.wss.on("connection", async (ws, req) => {
             var conn = await VoiceConnection.create(this.router,transport,params);
+            conn.addTransport(rtpTransport)
             this.connections.push(conn);
-            this.port+=2;
             ws.send(this.encodeMessage({op:8,d:{v:5,heartbeat_interval:999999999}}));
             ws.on("message", async (message: any) => {
                 message = JSON.parse(message);
@@ -153,11 +173,11 @@ export default class InternalVoiceModule implements BaseModule {
                                 mid: conn.params.id,
                                 connection: { version: 4, ip: (()=>{
                                     var ip = undefined;
-                                    if (req.headers.host == "127.0.0.1") {
-                                        ip = req.headers.host;
+                                    if (req.socket.remoteAddress == "127.0.0.1") {
+                                        ip = req.socket.remoteAddress;
                                     }
-                                    if (ServerData.getInstance().internalIps.includes(req.headers.host)) {
-                                        ip = req.headers.host;
+                                    if (ServerData.getInstance().internalIps.includes(req.socket.remoteAddress)) {
+                                        ip = req.socket.remoteAddress;
                                     }
                                     if (ip==undefined) {
                                         ip = ServerData.getInstance().publicIp;
@@ -225,14 +245,28 @@ export default class InternalVoiceModule implements BaseModule {
                                 op: 2,
                                 d: {
                                     ssrc: value,
-                                    port: 50000+this.connections.length,
+                                    port: (()=>{
+                                        return conn.params.iceCandidates[0].port;
+                                    })(),
                                     modes: [
                                         "aead_aes256_gcm",
                                         "xsalsa20_poly1305", 
                                         "xsalsa20_poly1305_suffix", 
                                         "xsalsa20_poly1305_lite"
                                     ],
-                                    ip: ServerData.getInstance().publicIp,
+                                    ip: (()=>{
+                                        return conn.params.iceCandidates[0].ip;
+                                        if (req.socket.remoteAddress == "127.0.0.1") {
+                                            return req.socket.remoteAddress;
+                                        }
+                                        if (req.socket.remoteAddress == "::ffff:127.0.0.1") {
+                                            return req.socket.remoteAddress;
+                                        }
+                                        if (ServerData.getInstance().internalIps.includes(req.socket.remoteAddress)) {
+                                            return req.socket.remoteAddress;
+                                        }
+                                        return ServerData.getInstance().publicIp;
+                                    })(), //ServerData.getInstance().publicIp,
                                     experiments: null
                                 }
                             }
@@ -261,7 +295,7 @@ export default class InternalVoiceModule implements BaseModule {
         const transport = await router.createWebRtcTransport({
             listenIps: (()=>{
                 var ips = new Array<{ip: string, announcedIp?: string }>();
-                ips.push({ip: "0.0.0.0", announcedIp: ServerData.getInstance().publicIp})
+                //ips.push({ip: "0.0.0.0", announcedIp: ServerData.getInstance().publicIp})
                 ips.push({ip: "192.168.0.106"}) // use this if running locally, switch to your own private ipv4
                 return ips;
             })(),

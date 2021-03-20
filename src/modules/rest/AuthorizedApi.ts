@@ -72,6 +72,18 @@ export class AuthorizedApiRouter implements ExpressModule {
         this.app.use('/guilds/:serverId/templates', (req,res)=>{
             res.status(404).json({ message: "Feature not yet supported.", code: 0 })
         })
+        this.app.get('/teams', (req,res)=>{
+            res.json([]);
+        })
+        this.app.get('/experiments',(req,res)=>{
+            res.json({"assignments": []})
+        })
+        this.app.get('/applications',(req,res)=>{
+            res.json([{"id": "802277291161944125", "name": "Youtube Music Desktop", "icon": "b62c6ea34f4d3c8676bb1ce0d2332fb5", "description": "Desktop client for Youtube Music.", "summary": "Desktop client for Youtube Music.", "cover_image": "b62c6ea34f4d3c8676bb1ce0d2332fb5", "hook": true, "verify_key": "e8a5fba2e3402dce0931515387d5976d1895c8cada34cf0767860a3cac8de054", "owner": {"id": "265479281453301762", "username": "20PercentRendered", "avatar": "65d22715493afbb5cc0d10cc3550677d", "discriminator": "1160", "public_flags": 128, "flags": 128}, "flags": 2048, "secret": "btBpD8rW4-hU7DB1JERKklBP3leQNKxJ", "redirect_uris": [], "rpc_application_state": 0, "store_application_state": 1, "verification_state": 1, "interactions_endpoint_url": null, "integration_public": true, "integration_require_code_grant": false}, {"id": "694615773716545657", "name": "Nachokissa", "icon": null, "description": "", "summary": "", "hook": true, "bot_public": false, "bot_require_code_grant": false, "verify_key": "988d6a91896aacd2d5dfd8f01fd19088fc80b7f61d6d02ec4de3b5d20215d29d", "owner": {"id": "265479281453301762", "username": "20PercentRendered", "avatar": "65d22715493afbb5cc0d10cc3550677d", "discriminator": "1160", "public_flags": 128, "flags": 128}, "flags": 0, "secret": "lYOds27fESzPVqoUde8NdDe52DkX522o", "redirect_uris": [], "rpc_application_state": 0, "store_application_state": 1, "verification_state": 1, "interactions_endpoint_url": null, "integration_public": false, "integration_require_code_grant": false, "bot": {"id": "694615773716545657", "username": "Nachokissa", "avatar": "8bf6a9fdd8e36b1426420e6172f71c20", "discriminator": "2397", "public_flags": 0, "bot": true, "token": "Njk0NjE1NzczNzE2NTQ1NjU3.XoONWQ.evZF_OEi8RuZcIS7NFgU16H-3Jo"}}])
+        })
+        this.app.get('/users/@me/guilds',(req,res)=>{
+            res.json({"id": "820332759176314920", "name": "20PercentRendered's server", "icon": null, "owner": true, "permissions": "8589934591", "features": [], "approximate_member_count": 1, "approximate_presence_count": 1})
+        })
         this.app.post('/channels/:channelId/messages', (req,res)=>{
             ServerData.getInstance().modules.getModule<SSLModule>("ssl").generateSnowflake().then((id)=>{
                 var msg = new GuildMessage();
@@ -131,6 +143,37 @@ export class AuthorizedApiRouter implements ExpressModule {
                 this.logger.debugerror(e)
                 res.status(500).json({message: "Guild generation failed.", code: 0});
             })
+        })
+        this.app.get('/invites/:inviteId', (req,res)=>{
+            res.json({
+                "code": req.params.inviteId,
+                "guild": {
+                    "id": "687663542849110215",
+                    "name": "Litt Klub",
+                    "splash": null,
+                    "banner": null,
+                    "description": null,
+                    "icon": "a147ef9bc1d5b9fd74434de4b1987904",
+                    "features": [],
+                    "verification_level": 0,
+                    "vanity_url_code": null
+                },
+                "channel": {
+                    "id": "765957791738626128",
+                    "name": "ok cooler",
+                    "type": 2
+                },
+                "inviter": {
+                    "id": "265479281453301762",
+                    "username": "20PercentRendered",
+                    "avatar": "65d22715493afbb5cc0d10cc3550677d",
+                    "discriminator": "1160",
+                    "public_flags": 128
+                }
+            });
+        })
+        this.app.post('/invites/:inviteId',(req,res)=>{
+            
         })
     }
     saveImageFromBase64(base64in, cdnPath): Promise<string> {

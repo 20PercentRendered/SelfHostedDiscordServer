@@ -6,12 +6,14 @@ import { ServerData } from "@main/serverdata";
 import { BaseModule } from "@main/classes/modules/BaseModule";
 import CoreModule from "@main/modules/core/main";
 import { User } from "@main/classes/User";
+import { Guild } from "@main/classes/Guild";
 
 export default class StorageModule implements BaseModule {
 	public readonly name: string = "Storage Module";
 	public readonly intName: string = "storage";
 	public readonly version: number = 1;
 	public userDatabase: Database<User>;
+	public guildDatabase: Database<Guild>;
 	readonly dependencies = new Array<string>("core");
 	private instances = [];
 	private logger: Logger;
@@ -27,6 +29,7 @@ export default class StorageModule implements BaseModule {
 			fs.mkdirSync("data");
 		}
 		this.userDatabase = this.getDB<User>("users");
+		this.guildDatabase = this.getDB<Guild>("guilds");
 		this.logger.info("Storage Initialized.");
 		setInterval(()=>{
 			this.logger.info("Saving databases.")

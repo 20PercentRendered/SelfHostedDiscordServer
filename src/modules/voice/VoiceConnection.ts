@@ -3,12 +3,11 @@ import { ServerData } from '@main/serverdata';
 import { Consumer, DtlsParameters, IceCandidate, IceParameters, MediaKind, Producer, Router, RtpCapabilities, RtpParameters, WebRtcTransport } from 'mediasoup/lib/types';
 import { stringify } from 'querystring';
 import * as sdpTransform from 'sdp-transform'; 
-import { Logform } from 'winston';
-import { Server } from 'ws';
+import { Transport } from 'mediasoup/lib/types'
 export class VoiceConnection {
     public sdp?: sdpTransform.SessionDescription;
-    public transport: WebRtcTransport;
-    public transports: Map<string, WebRtcTransport>;
+    public transport: Transport;
+    public transports: Map<string, Transport>;
     public consumers: Map<string, Consumer>;
     public producers: Map<string, Producer>;
     public connectionId: string;
@@ -34,7 +33,7 @@ export class VoiceConnection {
         return conn;
     }
 
-    addTransport(transport: WebRtcTransport) {
+    addTransport(transport: Transport) {
         this.transports.set(transport.id, transport)
     }
 

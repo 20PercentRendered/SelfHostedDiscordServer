@@ -21,7 +21,7 @@ export default class GatewayModule implements BaseModule {
 	private guilddb: Database<Guild>;
 	init(next: () => void) {
 		this.logger = new Logger("Gateway");
-		this.guilddb = ServerData.getInstance().modules.getModule<StorageModule>("storage").getDB<Guild>("guilds");
+		this.guilddb = ServerData.getInstance().modules.getModule<StorageModule>("storage").guildDatabase;
 		this.wss = new ws.Server({
 			noServer: true,
 			perMessageDeflate: false, // disabling permessagedeflate as we handle compression ourselves

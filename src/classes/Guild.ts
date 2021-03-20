@@ -38,6 +38,8 @@ export class Guild {
     public preferred_locale: string
     public rules_channel_id: string
     public public_updates_channel_id: string
+    public approximate_member_count = 543 
+    public approximate_presence_count = 312
     constructor (name) {
         this.name = name;
         this.members = new Array<GuildMember>();
