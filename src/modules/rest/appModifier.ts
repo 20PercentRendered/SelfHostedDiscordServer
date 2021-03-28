@@ -27,7 +27,7 @@ export class AppModifier {
             new ModificationData("ASSET_ENDPOINT",`${ip}`),
             new ModificationData("MEDIA_PROXY_ENDPOINT",`${ip}`),
             new ModificationData("WIDGET_ENDPOINT",`//${ip}/widget`),
-            new ModificationData("INVITE_HOST", `${ip}`),
+            new ModificationData("INVITE_HOST", `${ServerData.getInstance().dnsName+"/invite"}`),
             new ModificationData("MARKETING_ENDPOINT:",`${ip}`),
             new ModificationData("NETWORKING_ENDPOINT",`//${ip}/`),
             new ModificationData("RTC_LATENCY_ENDPOINT",`//${ip}/latency/rtc`),
