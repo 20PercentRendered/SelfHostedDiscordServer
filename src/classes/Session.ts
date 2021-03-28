@@ -1,11 +1,12 @@
 import { Connection } from "@main/modules/gateway/connection";
 import { User } from "./User";
-
+import { VoiceState } from "@main/classes/Voice";
 export class Session {
 	public token: string;
 	public gatewayConnection: Connection;
 	public user: User;
 	public sessionId: string;
+	public voiceState?: VoiceState;
 }
 export class SessionArray extends Array<Session> {
 	getWithToken(token: string) {

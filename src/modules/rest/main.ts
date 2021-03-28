@@ -18,7 +18,6 @@ import GatewayModule from "../gateway/main";
 import ws from "ws";
 import InternalVoiceModule from "../voice/main";
 import os from "os";
-import util from "util"
 
 export default class RestModule implements BaseModule {
 	public readonly name: string = "REST Api";
@@ -125,6 +124,10 @@ export default class RestModule implements BaseModule {
 		});
 
 		this.app.get("/developers/*", (req,res,next)=>{
+			this.devAppModifier.requestHandler(req,res,next);
+		});
+
+		this.app.get("/developers", (req,res,next)=>{
 			this.devAppModifier.requestHandler(req,res,next);
 		});
 

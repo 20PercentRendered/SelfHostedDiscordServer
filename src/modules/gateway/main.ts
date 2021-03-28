@@ -45,19 +45,29 @@ export default class GatewayModule implements BaseModule {
 				this.logger.debug("sent hb")
 				heartbeater.sent();
 			})
-			ws.on("message", (message: any) => {
-				this.logger.debug("m1:"+message);
-				message = conn.decodeMessage(message);
+			ws.on("message", (_message: any) => {
+				var message = conn.decodeMessage(_message);
 
-				if (!Message.CheckValidity(message)) {
+				if (!Message.CheckValidity(_message)) {
 					this.logger.debugerror(
 						"Message from client: " + conn.ip + " is invalid."
 					);
 				} else {
 					this.logger.debug("received: "+JSON.stringify(message));
+					console.log(message.op)
+					console.log(message.op != 2)
+					if (message.op != 2) {
+						if (conn.session==null) {
+							console.log("no session but still receiving?")
+							return;
+						}
+						if (conn.session.user==null) {
+							console.log("no user but still receiving?")
+							return;
+						}
+					}
 					switch (message.op) {
 						case MessageType.heartbeat: 
-							this.logger.debug("receved hb")
 							heartbeater.received();
 							break;
 						case MessageType.voice_state:
@@ -69,15 +79,28 @@ export default class GatewayModule implements BaseModule {
 							voiceState.self_video = message.data.self_video;
 							voiceState.self_mute = message.data.self_mute;
 							voiceState.session_id = conn.session.sessionId
+							console.log(voiceState.channel_id)
+							console.log(voiceState.channel_id != null)
+							console.log(conn.session.voiceState == null || conn.session.voiceState.channel_id == null)
 							conn.sendMessage(new Message(MessageType.event, voiceState, null, "VOICE_STATE_UPDATE"))
-							conn.sendMessage(new Message(MessageType.event, 
-								new VoiceServerUpdatePayload(
-									conn.session.token, `${req.headers.host}/voice`, 
-									message.data.guild_id), 
-								null, "VOICE_SERVER_UPDATE"))
+							if (voiceState.channel_id != null) {
+								if (conn.session.voiceState == null || conn.session.voiceState.channel_id == null) {
+									conn.sendMessage(new Message(MessageType.event, 
+										new VoiceServerUpdatePayload(
+											conn.session.token, `${req.headers.host}/voice`, 
+											message.data.guild_id), 
+										null, "VOICE_SERVER_UPDATE"));
+								}
+							} else {
+								if (conn.session.voiceState != null) {
+									// do disconnect things
+								}
+							}
+							conn.session.voiceState = voiceState;
 							break;
 						case MessageType.identify:
 							try {
+							console.log(message)
 							conn.onIdentify(message.data)
 							if (!conn.session.user)  {
 								conn.sendMessage(new Message(MessageType.event, {

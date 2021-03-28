@@ -95,7 +95,9 @@ export class Connection {
 	}
 	onIdentify(message) {
 		this.session = ServerData.getInstance().modules.getModule<SessionModule>("sessions").sessions.getOrCreate(message.token);
+		console.log(this.session)
 		this.session.user = ServerData.getInstance().modules.getModule<StorageModule>("storage").userDatabase.database.find((value)=>{
+			console.log(value.tokenFirstPart + " "+ message.token)
 			if (message.token.includes(value.tokenFirstPart)) {
 				return value;
 			}
@@ -141,6 +143,9 @@ export class Message {
 	}
 	static CheckValidity(message) {
 		var successfulChecks = 0;
+		if (message == null) {
+			return false;
+		}
 		if (message.d != undefined) {
 			successfulChecks++;
 		}

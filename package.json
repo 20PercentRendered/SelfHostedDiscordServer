@@ -53,6 +53,7 @@
     "random-number-csprng": "^1.0.2",
     "sdp-transform": "^2.14.1",
     "serverline": "^1.5.0",
+    "smart-buffer": "^4.1.0",
     "tiny-typed-emitter": "^2.0.3",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.9.0",

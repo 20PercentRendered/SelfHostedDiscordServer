@@ -11,12 +11,18 @@ export class ServerData {
 	public loader: Loader;
 	public publicIp: string;
     public internalIps: string[];
+    public dnsName: string;
 
 	// Constructor is private!
 	private constructor() {
 		this.modules = new ModuleArray();
 		this.settings = new Settings();
 		this.internalIps = new Array<string>();
+		if (this.settings.port=="443") {
+			this.dnsName = "127.0.0.1"
+		} else {
+			this.dnsName = "127.0.0.1:"+this.settings.port;
+		}
 	}
 
 	// Static method to retreive the singleton instance
