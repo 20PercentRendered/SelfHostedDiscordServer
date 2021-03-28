@@ -25,20 +25,21 @@ export default class SSLModule implements BaseModule {
 				var ssmarkerfile = fs.readFileSync("sslcert/selfsigned.marker", "utf8"); 
 				if (ssmarkerfile != null ) {
 					var ssmarker = <SelfSignedMarker>JSON.parse(ssmarkerfile);
-					ssmarker.date = new Date(ssmarker.date);
+					ssmarker.date = new Date(ssmarker.date)
 					var validTo = new Date(ssmarker.date.getFullYear(),ssmarker.date.getMonth(),ssmarker.date.getDate()+ssmarker.days);
 					if ((validTo.getTime()<=Date.now())) {
 						logger.warn("Self signed certs have expired. Creating new certificates.")
+						throw new Error("Certificates are out of date.")
 					} else {
 						logger.info("Certificates are up to date.")
 					}
 				}
 			} catch (e) {
-				// Do nothing
+				// Rethrow
 				logger.debugerror(e);
+				throw e;
 			}
 			this.ssl = new SSL(privateKey, certificate)
-			next();
 		} catch (e) {
 			logger.info("Creating certs. ");
 			logger.warn("Consider using your own certificates.");
