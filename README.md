@@ -1,6 +1,5 @@
-# ServCord
-
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/bc6eeefe707b4095b06017faf257da53)](https://app.codacy.com/gh/20PercentRendered/servcord-server?utm_source=github.com&utm_medium=referral&utm_content=20PercentRendered/servcord-server&utm_campaign=Badge_Grade_Settings)
+# ServCord (deprecated)
+# A rewrite is being made at [servcord](https://github.com/servcord)
 
 A self hostable Discord server. Currently very alpha.
 
